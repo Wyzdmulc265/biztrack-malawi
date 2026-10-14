@@ -39,6 +39,11 @@
         </div>
         <p id="dash-empty" class="muted" hidden>No transactions yet today. Tap + Add to record your first.</p>
       </div>
+      <div class="card">
+        <h3>Customers who owe you</h3>
+        <p id="cust-empty" class="muted" hidden>No credit sales yet. Credit sales appear here with each customer's balance.</p>
+        <ul id="cust-list" class="cust-list"></ul>
+      </div>
     </section>
 
     <!-- Add Transaction -->
@@ -102,6 +107,7 @@
             <option value="cash_sale">Cash sales</option>
             <option value="credit_sale">Credit sales</option>
             <option value="expense">Expenses</option>
+            <option value="payment">Payments</option>
           </select>
           <select id="filter-range" aria-label="Filter by date">
             <option value="all">All time</option>
@@ -125,6 +131,30 @@
   </main>
 
   <div id="toast" hidden></div>
+
+  <!-- Payment modal (FR-4) -->
+  <div id="pay-modal" class="modal" hidden>
+    <div class="modal-card">
+      <h3 id="pay-title">Record payment</h3>
+      <p id="pay-bal" class="muted"></p>
+      <div class="field">
+        <label for="pay-amount">Amount received (MK)</label>
+        <input id="pay-amount" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
+        <p class="err" id="pay-amount-err" hidden></p>
+      </div>
+      <div class="field">
+        <label for="pay-date">Date</label>
+        <input id="pay-date" type="date">
+        <p class="err" id="pay-date-err" hidden></p>
+      </div>
+      <div class="field">
+        <label for="pay-note">Note (optional)</label>
+        <input id="pay-note" type="text" maxlength="200" autocomplete="off">
+      </div>
+      <button type="button" id="pay-save" class="btn primary">Save payment</button>
+      <button type="button" id="pay-cancel" class="btn plain">Cancel</button>
+    </div>
+  </div>
 
   <nav class="bottomnav">
     <button class="nav-btn" data-screen="dashboard">Home</button>

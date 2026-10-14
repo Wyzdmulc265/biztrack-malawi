@@ -95,3 +95,26 @@ h2 { font-size: 1rem; margin: 0 0 12px; }
 .stat-label { font-size: 0.8rem; font-weight: 600; color: #555; margin: 0 0 4px; }
 .stat-value { font-size: 1.5rem; font-weight: 800; margin: 0; }
 .stat-sub { font-size: 0.75rem; color: #888; margin: 4px 0 0; }
+
+/* Feature 4: debt tracking */
+.cust-list { list-style: none; margin: 0; padding: 0; }
+.cust-row {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  padding: 12px 0; border-bottom: 1px solid #eee;
+}
+.cust-row:last-child { border-bottom: none; }
+.cust-row .who { font-weight: 600; display: block; }
+.cust-bal { font-size: 0.85rem; font-weight: 700; }
+.cust-bal.owes { color: #8a6116; }
+.cust-bal.advance { color: #1a5c2e; }
+.pay-btn { background: #fff; color: #1a5c2e; border: 1px solid #1a5c2e; }
+.badge.payment { background: #e7f3e9; color: #1a5c2e; }
+.modal {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  display: flex; align-items: flex-end; justify-content: center; z-index: 40;
+}
+.modal-card {
+  background: #fff; border-radius: 16px 16px 0 0; padding: 20px 16px 24px;
+  width: 100%; max-width: 520px;
+}
+.modal-card h3 { margin: 0 0 4px; font-size: 1.05rem; }
