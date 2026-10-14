@@ -15,10 +15,34 @@
   </header>
 
   <main>
-    <!-- Dashboard (stub until later in Stage 3) -->
+    <!-- Dashboard (FR-7, FR-8, NFR-4) -->
     <section id="dashboard-screen" hidden>
-      <div class="card stub">
-        <p>Dashboard arrives later in Stage 3, after transaction entry and history are solid.</p>
+      <div class="card">
+        <h2 id="dash-title">Today</h2>
+        <div class="stat">
+          <p class="stat-label">Sales (cash + credit)</p>
+          <p class="stat-value" id="stat-sales">MK0.00</p>
+          <p class="stat-sub" id="stat-sales-sub">cash MK0.00 / credit MK0.00</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Expenses</p>
+          <p class="stat-value" id="stat-expenses">MK0.00</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Net cash movement today</p>
+          <p class="stat-value" id="stat-cash">MK0.00</p>
+          <p class="stat-sub">Cash sales plus debt payments received, minus expenses. This is money movement, not profit.</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Customers owe you (total)</p>
+          <p class="stat-value" id="stat-outstanding">MK0.00</p>
+        </div>
+        <p id="dash-empty" class="muted" hidden>No transactions yet today. Tap + Add to record your first.</p>
+      </div>
+      <div class="card">
+        <h3>Customers who owe you</h3>
+        <p id="cust-empty" class="muted" hidden>No credit sales yet. Credit sales appear here with each customer's balance.</p>
+        <ul id="cust-list" class="cust-list"></ul>
       </div>
     </section>
 
@@ -83,6 +107,7 @@
             <option value="cash_sale">Cash sales</option>
             <option value="credit_sale">Credit sales</option>
             <option value="expense">Expenses</option>
+            <option value="payment">Payments</option>
           </select>
           <select id="filter-range" aria-label="Filter by date">
             <option value="all">All time</option>
@@ -107,6 +132,30 @@
 
   <div id="toast" hidden></div>
 
+  <!-- Payment modal (FR-4) -->
+  <div id="pay-modal" class="modal" hidden>
+    <div class="modal-card">
+      <h3 id="pay-title">Record payment</h3>
+      <p id="pay-bal" class="muted"></p>
+      <div class="field">
+        <label for="pay-amount">Amount received (MK)</label>
+        <input id="pay-amount" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
+        <p class="err" id="pay-amount-err" hidden></p>
+      </div>
+      <div class="field">
+        <label for="pay-date">Date</label>
+        <input id="pay-date" type="date">
+        <p class="err" id="pay-date-err" hidden></p>
+      </div>
+      <div class="field">
+        <label for="pay-note">Note (optional)</label>
+        <input id="pay-note" type="text" maxlength="200" autocomplete="off">
+      </div>
+      <button type="button" id="pay-save" class="btn primary">Save payment</button>
+      <button type="button" id="pay-cancel" class="btn plain">Cancel</button>
+    </div>
+  </div>
+
   <nav class="bottomnav">
     <button class="nav-btn" data-screen="dashboard">Home</button>
     <button class="nav-btn active" data-screen="add">+ Add</button>
@@ -116,6 +165,7 @@
 
   <script src="./js/db.js"></script>
   <script src="./js/money.js"></script>
+  <script src="./js/calc.js"></script>
   <script src="./js/app.js"></script>
 </body>
 </html>

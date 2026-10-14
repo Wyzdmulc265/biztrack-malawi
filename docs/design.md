@@ -1,7 +1,7 @@
 # BizTrack Malawi - Stage 2: Design Proposal
 
-**Version:** 1.0 (LOCKED)
-**Status:** Approved and locked by owner, 2026-10-14
+**Version:** 1.1 (LOCKED; cash movement definition amended by owner)
+**Status:** Approved and locked by owner, 2026-10-14. Amended 2026-10-14 (owner): cash movement now includes credit-sale payments.
 **Implements:** Requirements v1.0 (docs/requirements.md)
 
 ---
@@ -88,7 +88,7 @@ transactions, never stored. One source of truth.
 |--------|------------|
 | Sales (day) | sum(amountT) of cash_sale + credit_sale on that date |
 | Expenses (day) | sum(amountT) of expense on that date |
-| Cash movement (day) | cash_sale sum - expense sum on that date |
+| Cash movement (day) | cash_sale sum + payment sum - expense sum on that date (payments on credit sales are cash received; credit sales themselves are not) |
 | Outstanding per customer | sum(credit_sale) - sum(payment), per customerId |
 | Total outstanding | sum over customers of per-customer outstanding (if positive) |
 

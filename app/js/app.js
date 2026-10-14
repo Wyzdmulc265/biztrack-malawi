@@ -24,6 +24,7 @@ function show(name) {
   });
   $$('.nav-btn').forEach((b) => b.classList.toggle('active', b.dataset.screen === name));
   if (name === 'list') renderList();
+  if (name === 'dashboard') renderDashboard();
 }
 $$('.nav-btn').forEach((b) => b.addEventListener('click', () => show(b.dataset.screen)));
 
@@ -33,7 +34,8 @@ let currentType = 'cash_sale';
 function setType(t) {
   currentType = t;
   $$('.seg-btn').forEach((b) => b.classList.toggle('active', b.dataset.type === t));
-  $('#customer-field').hidden = t !== 'credit_sale';
+  // payments also reference a customer (debt tracking, FR-4)
+  $('#customer-field').hidden = !(t === 'credit_sale' || t === 'payment');
   $('#category-field').hidden = t !== 'expense';
   clearErrors();
 }
@@ -108,9 +110,9 @@ $('#save-btn').addEventListener('click', async () => {
   if (date < MIN_DATE) return showError('date', 'Date is more than a year ago');
 
   let customerId = null;
-  if (currentType === 'credit_sale') {
+  if (currentType === 'credit_sale' || currentType === 'payment') {
     const name = $('#customer').value.trim();
-    if (!name) return showError('customer', 'Customer name is required for a credit sale');
+    if (!name) return showError('customer', 'Customer name is required');
     customerId = await getOrCreateCustomer(name);
   }
 
@@ -158,6 +160,102 @@ $('#save-btn').addEventListener('click', async () => {
   }
 });
 
+// --- dashboard (FR-7, FR-8, NFR-4) - uses the shared calc module ---
+async function renderDashboard() {
+  const txs = await dbGetAll('transactions');
+  const t = totalsForDate(txs, TODAY);
+  $('#stat-sales').textContent = formatMK(t.sales);
+  $('#stat-sales-sub').textContent = 'cash ' + formatMK(t.cashSales) + ' / credit ' + formatMK(t.creditSales);
+  $('#stat-expenses').textContent = formatMK(t.expenses);
+  $('#stat-cash').textContent = formatMK(t.cashMovement);
+  $('#stat-outstanding').textContent = formatMK(totalOutstanding(txs));
+  $('#dash-empty').hidden = txs.some((x) => x.date === TODAY);
+  await renderCustomers(txs);
+}
+
+// --- customer balances + payment flow (FR-4) ---
+async function renderCustomers(txs) {
+  const out = outstandingByCustomer(txs);
+  const customers = await dbGetAll('customers');
+  const rows = customers
+    .filter((c) => out[c.id] !== undefined && out[c.id] !== 0)
+    .sort((a, b) => Math.abs(out[b.id]) - Math.abs(out[a.id]));
+
+  $('#cust-empty').hidden = rows.length > 0;
+  $('#cust-list').innerHTML = rows.map((c) => {
+    const bal = out[c.id];
+    const balText = bal > 0
+      ? '<span class="cust-bal owes">' + formatMK(bal) + '</span>'
+      : '<span class="cust-bal advance">paid ahead ' + formatMK(-bal) + '</span>';
+    return '<li class="cust-row"><div><span class="who">' + escapeHtml(c.name) + '</span>' + balText + '</div>' +
+      '<button type="button" class="btn small pay-btn" data-id="' + escapeHtml(c.id) + '">Payment</button></li>';
+  }).join('');
+
+  $$('#cust-list .pay-btn').forEach((b) =>
+    b.addEventListener('click', () => openPaymentModal(b.dataset.id)));
+}
+
+let payingCustomerId = null;
+async function openPaymentModal(customerId) {
+  const c = await dbGet('customers', customerId);
+  const txs = await dbGetAll('transactions');
+  const out = outstandingByCustomer(txs);
+  const bal = out[customerId] || 0;
+  payingCustomerId = customerId;
+  $('#pay-title').textContent = 'Record payment - ' + c.name;
+  $('#pay-bal').textContent = bal >= 0 ? 'Currently owes ' + formatMK(bal) : 'Has paid ahead: advance of ' + formatMK(-bal);
+  $('#pay-amount').value = '';
+  $('#pay-note').value = '';
+  $('#pay-date').value = TODAY;
+  $('#pay-date').max = TODAY;
+  $('#pay-date').min = MIN_DATE;
+  clearErrors();
+  $('#pay-modal').hidden = false;
+  $('#pay-amount').focus();
+}
+$('#pay-cancel').addEventListener('click', () => { $('#pay-modal').hidden = true; payingCustomerId = null; });
+
+let savingPayment = false;
+$('#pay-save').addEventListener('click', async () => {
+  if (savingPayment || !payingCustomerId) return;
+  clearErrors();
+  const amount = parseAmountT($('#pay-amount').value);
+  if (!amount.ok) return showError('pay-amount', amount.error);
+  const date = $('#pay-date').value;
+  if (!date) return showError('pay-date', 'Date is required');
+  if (date > TODAY) return showError('pay-date', 'Future dates are not allowed');
+  if (date < MIN_DATE) return showError('pay-date', 'Date is more than a year ago');
+
+  const now = Date.now();
+  const tx = {
+    id: uuid(),
+    type: 'payment',
+    amountT: amount.amountT,
+    categoryId: null,
+    customerId: payingCustomerId,
+    date,
+    note: $('#pay-note').value.trim(),
+    createdAt: now,
+    updatedAt: now
+  };
+  savingPayment = true;
+  $('#pay-save').disabled = true;
+  try {
+    await dbPut('transactions', tx);
+    $('#pay-modal').hidden = true;
+    payingCustomerId = null;
+    toast('Payment saved ' + formatMK(tx.amountT));
+    renderDashboard();
+  } catch (err) {
+    // modal stays open, fields preserved (design section 6)
+    $('#pay-amount-err').textContent = 'Could not save. Storage unavailable or full - try again.';
+    $('#pay-amount-err').hidden = false;
+  } finally {
+    savingPayment = false;
+    $('#pay-save').disabled = false;
+  }
+});
+
 // --- toast ---
 let toastTimer = null;
 function toast(msg) {
@@ -169,7 +267,7 @@ function toast(msg) {
 }
 
 // --- transactions list (FR-5 search/filter, FR-6 edit/delete) ---
-const TYPE_LABEL = { cash_sale: 'Cash sale', credit_sale: 'Credit sale', expense: 'Expense' };
+const TYPE_LABEL = { cash_sale: 'Cash sale', credit_sale: 'Credit sale', expense: 'Expense', payment: 'Payment' };
 const filterState = { q: '', type: 'all', range: 'all' };
 
 function rangeStart(range) {
@@ -258,12 +356,8 @@ async function openEdit(id) {
   show('add');
   setType(t.type);
   $('#amount').value = amountToInput(t.amountT);
-  if (t.customerId) {
-    const c = await dbGet('customers', t.customerId);
-    $('#customer').value = c ? c.name : '';
-  } else {
-    $('#customer').value = '';
-  }
+  const c = t.customerId ? await dbGet('customers', t.customerId) : null;
+  $('#customer').value = c ? c.name : '';
   await loadCategories(t.categoryId);
   $('#category').value = t.categoryId || '';
   $('#date').value = t.date;
