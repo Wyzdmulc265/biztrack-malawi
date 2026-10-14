@@ -15,10 +15,29 @@
   </header>
 
   <main>
-    <!-- Dashboard (stub until later in Stage 3) -->
+    <!-- Dashboard (FR-7, FR-8, NFR-4) -->
     <section id="dashboard-screen" hidden>
-      <div class="card stub">
-        <p>Dashboard arrives later in Stage 3, after transaction entry and history are solid.</p>
+      <div class="card">
+        <h2 id="dash-title">Today</h2>
+        <div class="stat">
+          <p class="stat-label">Sales (cash + credit)</p>
+          <p class="stat-value" id="stat-sales">MK0.00</p>
+          <p class="stat-sub" id="stat-sales-sub">cash MK0.00 / credit MK0.00</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Expenses</p>
+          <p class="stat-value" id="stat-expenses">MK0.00</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Net cash movement today</p>
+          <p class="stat-value" id="stat-cash">MK0.00</p>
+          <p class="stat-sub">This is money movement, not profit. It does not account for stock already bought.</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Customers owe you (total)</p>
+          <p class="stat-value" id="stat-outstanding">MK0.00</p>
+        </div>
+        <p id="dash-empty" class="muted" hidden>No transactions yet today. Tap + Add to record your first.</p>
       </div>
     </section>
 
@@ -116,6 +135,7 @@
 
   <script src="./js/db.js"></script>
   <script src="./js/money.js"></script>
+  <script src="./js/calc.js"></script>
   <script src="./js/app.js"></script>
 </body>
 </html>

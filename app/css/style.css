@@ -88,3 +88,10 @@ h2 { font-size: 1rem; margin: 0 0 12px; }
   font-size: 0.8rem; font-weight: 700; cursor: pointer;
 }
 .btn.plain { background: #fff; color: #1a5c2e; border: 1px solid #d8d8d0; margin-bottom: 10px; }
+
+/* Feature 3: dashboard stats */
+.stat { padding: 14px 0; border-bottom: 1px solid #eee; }
+.stat:last-of-type { border-bottom: none; }
+.stat-label { font-size: 0.8rem; font-weight: 600; color: #555; margin: 0 0 4px; }
+.stat-value { font-size: 1.5rem; font-weight: 800; margin: 0; }
+.stat-sub { font-size: 0.75rem; color: #888; margin: 4px 0 0; }

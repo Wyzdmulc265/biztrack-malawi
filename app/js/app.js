@@ -24,6 +24,7 @@ function show(name) {
   });
   $$('.nav-btn').forEach((b) => b.classList.toggle('active', b.dataset.screen === name));
   if (name === 'list') renderList();
+  if (name === 'dashboard') renderDashboard();
 }
 $$('.nav-btn').forEach((b) => b.addEventListener('click', () => show(b.dataset.screen)));
 
@@ -157,6 +158,18 @@ $('#save-btn').addEventListener('click', async () => {
     $('#save-btn').disabled = false;
   }
 });
+
+// --- dashboard (FR-7, FR-8, NFR-4) - uses the shared calc module ---
+async function renderDashboard() {
+  const txs = await dbGetAll('transactions');
+  const t = totalsForDate(txs, TODAY);
+  $('#stat-sales').textContent = formatMK(t.sales);
+  $('#stat-sales-sub').textContent = 'cash ' + formatMK(t.cashSales) + ' / credit ' + formatMK(t.creditSales);
+  $('#stat-expenses').textContent = formatMK(t.expenses);
+  $('#stat-cash').textContent = formatMK(t.cashMovement);
+  $('#stat-outstanding').textContent = formatMK(totalOutstanding(txs));
+  $('#dash-empty').hidden = txs.some((x) => x.date === TODAY);
+}
 
 // --- toast ---
 let toastTimer = null;

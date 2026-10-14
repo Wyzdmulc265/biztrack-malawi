@@ -1,8 +1,8 @@
 // BizTrack Malawi - service worker: offline app shell (Stage 3, feature 1)
-const CACHE = 'biztrack-shell-v1';
+const CACHE = 'biztrack-shell-v2';
 const SHELL = [
   './', './index.html', './css/style.css',
-  './js/db.js', './js/money.js', './js/app.js',
+  './js/db.js', './js/money.js', './js/calc.js', './js/app.js',
   './manifest.webmanifest', './icon.svg'
 ];
 
