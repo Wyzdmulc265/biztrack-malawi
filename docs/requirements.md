@@ -1,7 +1,7 @@
 # BizTrack Malawi - Stage 1: Requirements Document
 
-**Version:** 0.2 (owner review decisions incorporated)
-**Status:** Awaiting final approval to lock as v1.0
+**Version:** 1.0 (LOCKED)
+**Status:** Approved and locked by owner, 2026-10-14
 **Date:** 2026-10-14
 
 ---
@@ -102,4 +102,4 @@ to capture transactions and turn them into useful information.
 | Tambala decimals? | **Included** - two decimal places supported, driven by mobile money amounts |
 
 ---
-*Prepared by the AI agent for owner review. No implementation begins until this document is approved and locked.*
+This document is locked as v1.0. Changes require a new version and explicit owner approval.

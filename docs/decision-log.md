@@ -13,3 +13,4 @@
 | 9 | 2026-10-14 | Expense categories user-editable; defaults shipped; add flow reachable from entry screen | Owner decision at requirements review |
 | 10 | 2026-10-14 | No customer names on cash sales | Owner decision; keep cash entry minimal |
 | 11 | 2026-10-14 | Tambala (2 decimal places) supported, not whole-kwacha-only | Owner decision; mobile money amounts include tambala |
+| 12 | 2026-10-14 | Requirements document locked as v1.0 | Owner approval gate passed | Owner |
