@@ -17,3 +17,4 @@
 | 13 | 2026-10-14 | Future dates blocked entirely; today is latest allowed | Owner decision at design review |
 | 14 | 2026-10-14 | Deleting credit sale keeps customer record; only transaction removed | Owner decision at design review |
 | 15 | 2026-10-14 | Weekly CSV = full transaction list + totals rows at end | Owner decision at design review |
+| 16 | 2026-10-14 | Design document locked as v1.0 | Owner approval gate passed | Owner |

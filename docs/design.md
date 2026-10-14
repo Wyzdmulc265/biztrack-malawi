@@ -1,7 +1,7 @@
 # BizTrack Malawi - Stage 2: Design Proposal
 
-**Version:** 0.2 (owner review decisions incorporated)
-**Status:** Awaiting approval. No implementation before approval.
+**Version:** 1.0 (LOCKED)
+**Status:** Approved and locked by owner, 2026-10-14
 **Implements:** Requirements v1.0 (docs/requirements.md)
 
 ---
@@ -134,4 +134,4 @@ dashboard, list, and reports; no per-screen re-implementations.
 | CSV scope? | **Full transaction list for the week, with totals at the end.** |
 
 ---
-*Prepared by the AI agent for owner review. Implementation begins only after approval.*
+This design is locked as v1.0. Changes require a new version and explicit owner approval.
