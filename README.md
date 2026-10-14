@@ -18,7 +18,9 @@ lead to cash shortages even when the business is making sales.
 
 ## Status
 - [x] Problem research and scope (Stage 0)
-- [ ] Requirements document (Stage 1) - in review
+- [x] Requirements document (Stage 1) - locked v1.0
+- [x] Design document (Stage 2) - locked v1.0
+- [ ] Stage 3: feature-by-feature build - in progress
 - [ ] Architecture: static PWA, HTML/CSS/JS, IndexedDB, service worker, device-only storage in v1
 - [ ] Hosting plan: this repo, auto-deployed via Cloudflare Pages
 
