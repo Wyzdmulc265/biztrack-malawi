@@ -121,27 +121,34 @@ $('#save-btn').addEventListener('click', async () => {
   }
 
   const now = Date.now();
+  const existing = editingId ? await dbGet('transactions', editingId) : null;
+  if (editingId && !existing) return; // was deleted while editing
+
   const tx = {
-    id: uuid(),
+    id: existing ? existing.id : uuid(),
     type: currentType,
     amountT: amount.amountT,
     categoryId,
     customerId,
     date,
     note: $('#note').value.trim(),
-    createdAt: now,
+    createdAt: existing ? existing.createdAt : now,
     updatedAt: now
   };
 
   saving = true;
   $('#save-btn').disabled = true;
   try {
-    await dbAdd('transactions', tx);
+    await dbPut('transactions', tx);
+    const updated = !!existing;
     $('#amount').value = '';
     $('#customer').value = '';
     $('#note').value = '';
+    $('#date').value = TODAY;
+    resetEditState();
     await loadCustomers();
-    toast('Saved ' + formatMK(tx.amountT));
+    if (updated) { toast('Updated ' + formatMK(tx.amountT)); show('list'); }
+    else { toast('Saved ' + formatMK(tx.amountT)); }
   } catch (err) {
     // Entry fields preserved so the owner can retry (design section 6)
     $('#storage-error').hidden = false;
@@ -161,24 +168,124 @@ function toast(msg) {
   toastTimer = setTimeout(() => { el.hidden = true; }, 2500);
 }
 
-// --- minimal list (verification view; filters/search come later in Stage 3) ---
+// --- transactions list (FR-5 search/filter, FR-6 edit/delete) ---
 const TYPE_LABEL = { cash_sale: 'Cash sale', credit_sale: 'Credit sale', expense: 'Expense' };
+const filterState = { q: '', type: 'all', range: 'all' };
+
+function rangeStart(range) {
+  if (range === 'today') return TODAY;
+  if (range === 'week') return localISO(new Date(Date.now() - 7 * 86400000));
+  if (range === 'month') return localISO(new Date(Date.now() - 30 * 86400000));
+  return null; // all time
+}
+
+function dayLabel(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function txSearchText(t, custName, catName) {
+  const parts = [t.note || '', t.customerId ? custName[t.customerId] : '', t.categoryId ? catName[t.categoryId] : '', TYPE_LABEL[t.type]];
+  return parts.join(' ').toLowerCase();
+}
 
 async function renderList() {
   const [txs, customers, cats] = await Promise.all([dbGetAll('transactions'), dbGetAll('customers'), dbGetAll('categories')]);
   const custName = {}; customers.forEach((c) => { custName[c.id] = c.name; });
   const catName = {}; cats.forEach((c) => { catName[c.id] = c.name; });
-  txs.sort((a, b) => b.createdAt - a.createdAt);
+
+  const start = rangeStart(filterState.range);
+  const q = filterState.q.trim().toLowerCase();
+  const filtered = txs.filter((t) =>
+    (filterState.type === 'all' || t.type === filterState.type) &&
+    (!start || t.date >= start) &&
+    (!q || txSearchText(t, custName, catName).includes(q))
+  );
+  filtered.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
 
   $('#list-empty').hidden = txs.length > 0;
-  $('#tx-list').innerHTML = txs.map((t) => {
+  $('#list-nomatch').hidden = !(txs.length > 0 && filtered.length === 0);
+  if (txs.length === 0 || filtered.length === 0) {
+    $('#tx-list').innerHTML = '';
+    return;
+  }
+
+  // group by day (design 3.3), newest day first
+  let html = '';
+  let currentDay = null;
+  for (const t of filtered) {
+    if (t.date !== currentDay) {
+      if (currentDay !== null) html += '</ul>';
+      currentDay = t.date;
+      html += '<p class="day-head">' + dayLabel(t.date) + '</p><ul class="tx-list">';
+    }
     const who = t.customerId ? custName[t.customerId] : (t.categoryId ? catName[t.categoryId] : '');
-    return '<li class="tx-row"><div><span class="badge ' + t.type + '">' + TYPE_LABEL[t.type] + '</span>' +
+    html += '<li class="tx-row" data-id="' + escapeHtml(t.id) + '">' +
+      '<div class="tx-main"><span class="badge ' + t.type + '">' + TYPE_LABEL[t.type] + '</span>' +
       (who ? ' <span class="who">' + escapeHtml(who) + '</span>' : '') +
       (t.note ? ' <span class="note">' + escapeHtml(t.note) + '</span>' : '') +
-      '</div><div class="right"><span class="amt">' + formatMK(t.amountT) + '</span><span class="date">' + escapeHtml(t.date) + '</span></div></li>';
-  }).join('');
+      '<span class="amt">' + formatMK(t.amountT) + '</span></div>' +
+      '<button type="button" class="del-btn" aria-label="Delete transaction">Delete</button></li>';
+  }
+  html += '</ul>';
+  $('#tx-list').innerHTML = html;
+
+  $$('#tx-list .tx-row').forEach((row) => row.addEventListener('click', () => openEdit(row.dataset.id)));
+  $$('#tx-list .del-btn').forEach((btn) => btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (!confirm('Delete this transaction? This cannot be undone.')) return;
+    await dbDelete('transactions', btn.closest('.tx-row').dataset.id);
+    renderList();
+  }));
 }
+
+$('#search').addEventListener('input', (e) => { filterState.q = e.target.value; renderList(); });
+$('#filter-type').addEventListener('change', (e) => { filterState.type = e.target.value; renderList(); });
+$('#filter-range').addEventListener('change', (e) => { filterState.range = e.target.value; renderList(); });
+
+// --- edit mode (FR-6): tap a row to load it into the entry form ---
+let editingId = null;
+
+function amountToInput(amountT) {
+  const t = Math.abs(amountT);
+  return Math.floor(t / 100) + '.' + String(t % 100).padStart(2, '0');
+}
+
+async function openEdit(id) {
+  const t = await dbGet('transactions', id);
+  if (!t) return;
+  editingId = id;
+  show('add');
+  setType(t.type);
+  $('#amount').value = amountToInput(t.amountT);
+  if (t.customerId) {
+    const c = await dbGet('customers', t.customerId);
+    $('#customer').value = c ? c.name : '';
+  } else {
+    $('#customer').value = '';
+  }
+  await loadCategories(t.categoryId);
+  $('#category').value = t.categoryId || '';
+  $('#date').value = t.date;
+  $('#note').value = t.note || '';
+  $('#save-btn').textContent = 'Update';
+  $('#edit-cancel-btn').hidden = false;
+}
+
+function resetEditState() {
+  editingId = null;
+  $('#save-btn').textContent = 'Save';
+  $('#edit-cancel-btn').hidden = true;
+}
+
+$('#edit-cancel-btn').addEventListener('click', () => {
+  resetEditState();
+  $('#amount').value = '';
+  $('#customer').value = '';
+  $('#note').value = '';
+  $('#date').value = TODAY;
+  show('list');
+});
 
 // --- init ---
 openDB()

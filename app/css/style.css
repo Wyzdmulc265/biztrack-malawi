@@ -75,3 +75,16 @@ h2 { font-size: 1rem; margin: 0 0 12px; }
   font-weight: 600; color: #777; cursor: pointer;
 }
 .nav-btn.active { color: #1a5c2e; }
+
+/* Feature 2: list filters, day groups, edit mode */
+.filters { display: grid; gap: 8px; margin-bottom: 14px; }
+.filters input, .filters select { width: 100%; min-height: 44px; padding: 8px 10px; font-size: 0.9rem; border: 1px solid #d8d8d0; border-radius: 8px; background: #fff; font-family: inherit; }
+.day-head { font-size: 0.75rem; font-weight: 700; color: #1a5c2e; margin: 14px 0 2px; text-transform: uppercase; letter-spacing: 0.03em; }
+.tx-row { cursor: pointer; }
+.tx-main { flex: 1; min-width: 0; }
+.tx-main .amt { display: block; margin-top: 2px; }
+.del-btn {
+  min-height: 44px; min-width: 60px; background: none; border: none; color: #b3261e;
+  font-size: 0.8rem; font-weight: 700; cursor: pointer;
+}
+.btn.plain { background: #fff; color: #1a5c2e; border: 1px solid #d8d8d0; margin-bottom: 10px; }

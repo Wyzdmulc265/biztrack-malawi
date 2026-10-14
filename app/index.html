@@ -66,17 +66,34 @@
           <textarea id="note" rows="2" maxlength="200"></textarea>
         </div>
 
+        <button type="button" id="edit-cancel-btn" class="btn plain" hidden>Cancel edit</button>
         <button type="button" id="save-btn" class="btn primary">Save</button>
         <div id="storage-error" class="banner" hidden>Could not save. Storage unavailable or full - your entry is preserved, try again.</div>
       </div>
     </section>
 
-    <!-- Transactions list (minimal version: verifies entries persist) -->
+    <!-- Transactions list (FR-5, FR-6) -->
     <section id="list-screen" hidden>
       <div class="card">
         <h2>Transactions</h2>
+        <div class="filters">
+          <input id="search" type="search" placeholder="Search note, customer, category" aria-label="Search transactions">
+          <select id="filter-type" aria-label="Filter by type">
+            <option value="all">All types</option>
+            <option value="cash_sale">Cash sales</option>
+            <option value="credit_sale">Credit sales</option>
+            <option value="expense">Expenses</option>
+          </select>
+          <select id="filter-range" aria-label="Filter by date">
+            <option value="all">All time</option>
+            <option value="today">Today</option>
+            <option value="week">Last 7 days</option>
+            <option value="month">Last 30 days</option>
+          </select>
+        </div>
         <p id="list-empty" hidden class="muted">No transactions yet. Add your first one.</p>
-        <ul id="tx-list" class="tx-list"></ul>
+        <p id="list-nomatch" hidden class="muted">No transactions match your search or filter.</p>
+        <div id="tx-list"></div>
       </div>
     </section>
 
