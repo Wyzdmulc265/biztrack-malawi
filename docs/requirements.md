@@ -1,7 +1,7 @@
 # BizTrack Malawi - Stage 1: Requirements Document
 
-**Version:** 1.0 (LOCKED)
-**Status:** Approved and locked by owner, 2026-10-14
+**Version:** 1.1 (LOCKED; FR-8 amended by owner)
+**Status:** Approved and locked by owner, 2026-10-14. Amended 2026-10-14 (owner): FR-8 cash movement now includes credit-sale payments.
 **Date:** 2026-10-14
 
 ---
@@ -65,7 +65,7 @@ to capture transactions and turn them into useful information.
 | FR-5 | Transactions list, newest first, searchable by text, filterable by type and date | Owner can find a specific transaction within 10 seconds |
 | FR-6 | Edit or delete a transaction, with confirmation; summaries recalculate | Editing an amount updates all affected figures immediately |
 | FR-7 | Dashboard shows today's totals: sales, expenses, net cash movement, total outstanding customer balances | Figures match the transactions recorded for that date |
-| FR-8 | Credit sales are counted as sales but NOT as cash received | Cash movement excludes credit sales; outstanding balances include them |
+| FR-8 | Credit sales are counted as sales but NOT as cash received. Payments received against credit sales ARE counted as cash received on the day the payment happens | Cash movement = cash sales + debt payments received - expenses; outstanding balances reflect both |
 | FR-9 | Weekly report: totals for sales, expenses, stock purchases, debts incurred, payments received; exportable as CSV | Exported file opens correctly in Excel/LibreOffice |
 | FR-10 | The application works fully offline, including adding a first transaction with no connectivity | All FR-1 to FR-9 pass with airplane mode on |
 | FR-11 | The expense category list is user-editable: the owner can add new categories; default categories are provided; the editing flow must be discoverable from the transaction entry screen | Owner can add a category (e.g. "Packaging") and immediately use it for a new expense |

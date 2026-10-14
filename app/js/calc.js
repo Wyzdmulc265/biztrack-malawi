@@ -5,22 +5,25 @@
 'use strict';
 
 // Totals for a single local date (YYYY-MM-DD).
-// sales = cash + credit sales. cashMovement = cash sales - expenses (FR-8:
+// sales = cash + credit sales. cashMovement = cash sales + payments - expenses (FR-8 v1.1:
 // credit sales are sales but NOT cash received).
 function totalsForDate(txs, date) {
-  let cashSales = 0, creditSales = 0, expenses = 0;
+  let cashSales = 0, creditSales = 0, expenses = 0, payments = 0;
   for (const t of txs) {
     if (t.date !== date) continue;
     if (t.type === 'cash_sale') cashSales += t.amountT;
     else if (t.type === 'credit_sale') creditSales += t.amountT;
     else if (t.type === 'expense') expenses += t.amountT;
+    else if (t.type === 'payment') payments += t.amountT;
   }
   return {
     cashSales,
     creditSales,
     sales: cashSales + creditSales,
     expenses,
-    cashMovement: cashSales - expenses
+    payments,
+    // FR-8 (v1.1): credit sales are NOT cash received; payments ARE.
+    cashMovement: cashSales + payments - expenses
   };
 }
 
