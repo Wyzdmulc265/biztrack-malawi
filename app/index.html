@@ -122,10 +122,35 @@
       </div>
     </section>
 
-    <!-- Reports (stub) -->
+        <!-- Reports (FR-9, D15) -->
     <section id="reports-screen" hidden>
-      <div class="card stub">
-        <p>Reports arrive later in Stage 3.</p>
+      <div class="card">
+        <div class="week-nav">
+          <button type="button" id="week-prev" aria-label="Previous week">&#8249;</button>
+          <h2 id="week-label">This week</h2>
+          <button type="button" id="week-next" aria-label="Next week">&#8250;</button>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Sales (cash + credit)</p>
+          <p class="stat-value" id="rep-sales">MK0.00</p>
+          <p class="stat-sub" id="rep-sales-sub">cash MK0.00 / credit MK0.00</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Expenses</p>
+          <p class="stat-value" id="rep-expenses">MK0.00</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Payments received</p>
+          <p class="stat-value" id="rep-payments">MK0.00</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">Net cash movement</p>
+          <p class="stat-value" id="rep-cash">MK0.00</p>
+          <p class="stat-sub">Money movement, not profit.</p>
+        </div>
+        <p id="rep-empty" class="muted" hidden>No transactions in this week.</p>
+        <button type="button" id="csv-btn" class="btn primary">Export this week as CSV</button>
+        <p class="stat-sub">CSV contains the full transaction list with totals at the end.</p>
       </div>
     </section>
   </main>

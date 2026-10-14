@@ -25,6 +25,7 @@ function show(name) {
   $$('.nav-btn').forEach((b) => b.classList.toggle('active', b.dataset.screen === name));
   if (name === 'list') renderList();
   if (name === 'dashboard') renderDashboard();
+  if (name === 'reports') renderReports();
 }
 $$('.nav-btn').forEach((b) => b.addEventListener('click', () => show(b.dataset.screen)));
 
@@ -389,3 +390,95 @@ openDB()
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js');
 }
+
+// --- reports (FR-9, D15): weekly summary + CSV export ---
+let weekStartISO = mondayOf(TODAY);
+
+function mondayOf(iso) {
+  const d = new Date(iso + 'T00:00:00');
+  const day = (d.getDay() + 6) % 7; // Mon=0 ... Sun=6
+  return localISO(new Date(d.getTime() - day * 86400000));
+}
+function weekEndOf(startIso) {
+  return localISO(new Date(new Date(startIso + 'T00:00:00').getTime() + 6 * 86400000));
+}
+function weekLabel(startIso) {
+  const s = new Date(startIso + 'T00:00:00');
+  const e = new Date(weekEndOf(startIso) + 'T00:00:00');
+  const fmt = (d, o) => d.toLocaleDateString('en-GB', o);
+  const part1 = s.getMonth() === e.getMonth()
+    ? fmt(s, { weekday: 'short', day: 'numeric' })
+    : fmt(s, { weekday: 'short', day: 'numeric', month: 'short' });
+  return part1 + ' \u2013 ' + fmt(e, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+}
+function inWeek(t, start, end) { return t.date >= start && t.date <= end; }
+
+async function renderReports() {
+  const txs = await dbGetAll('transactions');
+  const start = weekStartISO, end = weekEndOf(start);
+  const t = totalsForRange(txs, start, end);
+  $('#week-label').textContent = weekLabel(start);
+  $('#week-next').disabled = start >= mondayOf(TODAY);
+  $('#rep-sales').textContent = formatMK(t.sales);
+  $('#rep-sales-sub').textContent = 'cash ' + formatMK(t.cashSales) + ' / credit ' + formatMK(t.creditSales);
+  $('#rep-expenses').textContent = formatMK(t.expenses);
+  $('#rep-payments').textContent = formatMK(t.payments);
+  $('#rep-cash').textContent = formatMK(t.cashMovement);
+  const hasTx = txs.some((x) => inWeek(x, start, end));
+  $('#rep-empty').hidden = hasTx;
+  $('#csv-btn').disabled = !hasTx;
+}
+$('#week-prev').addEventListener('click', () => {
+  weekStartISO = localISO(new Date(new Date(weekStartISO + 'T00:00:00').getTime() - 7 * 86400000));
+  renderReports();
+});
+$('#week-next').addEventListener('click', () => {
+  weekStartISO = localISO(new Date(new Date(weekStartISO + 'T00:00:00').getTime() + 7 * 86400000));
+  renderReports();
+});
+
+// --- CSV export (D15: full list, then totals) ---
+function csvField(v) {
+  return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+}
+function amountToCsv(amountT) {
+  const t = Math.abs(amountT);
+  return Math.floor(t / 100) + '.' + String(t % 100).padStart(2, '0');
+}
+$('#csv-btn').addEventListener('click', async () => {
+  const start = weekStartISO, end = weekEndOf(start);
+  const [txs, customers, cats] = await Promise.all([dbGetAll('transactions'), dbGetAll('customers'), dbGetAll('categories')]);
+  const custName = {}; customers.forEach((c) => { custName[c.id] = c.name; });
+  const catName = {}; cats.forEach((c) => { catName[c.id] = c.name; });
+
+  const rows = txs.filter((x) => inWeek(x, start, end))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.createdAt - b.createdAt));
+  const t = totalsForRange(txs, start, end);
+
+  const lines = [['Date', 'Type', 'Customer', 'Category', 'Note', 'Amount'].map(csvField).join(',')];
+  for (const x of rows) {
+    lines.push([
+      x.date, TYPE_LABEL[x.type] || x.type,
+      x.customerId ? custName[x.customerId] : '',
+      x.categoryId ? catName[x.categoryId] : '',
+      x.note || '', amountToCsv(x.amountT)
+    ].map(csvField).join(','));
+  }
+  lines.push('');
+  lines.push(['Totals', '', '', '', '', ''].map(csvField).join(','));
+  lines.push(['Sales (cash + credit)', '', '', '', '', amountToCsv(t.sales)].map(csvField).join(','));
+  lines.push(['Expenses', '', '', '', '', amountToCsv(t.expenses)].map(csvField).join(','));
+  lines.push(['Payments received', '', '', '', '', amountToCsv(t.payments)].map(csvField).join(','));
+  lines.push(['Net cash movement', '', '', '', '', amountToCsv(t.cashMovement)].map(csvField).join(','));
+
+  const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'biztrack-week-of-' + start + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  toast('CSV exported for ' + weekLabel(start));
+});
