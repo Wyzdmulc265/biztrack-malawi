@@ -1,6 +1,6 @@
 # BizTrack Malawi - Stage 2: Design Proposal
 
-**Version:** 0.1 (draft for owner review)
+**Version:** 0.2 (owner review decisions incorporated)
 **Status:** Awaiting approval. No implementation before approval.
 **Implements:** Requirements v1.0 (docs/requirements.md)
 
@@ -67,7 +67,7 @@ transactions, never stored. One source of truth.
 - Amount field: numeric keypad, MK prefix, accepts up to 2 decimals.
 - Fields shown adapt to type: credit sale adds customer (with autocomplete of
   existing names), expense adds category (with "+ Add category" inline).
-- Date defaults to today; editable, future dates blocked.
+- Date defaults to today; editable; future dates blocked entirely (today is the latest allowed).
 - Note (optional).
 - Double-tap protection: Save button disables until write completes.
 
@@ -80,7 +80,7 @@ transactions, never stored. One source of truth.
 ### 3.4 Reports
 - Week picker (defaults to current week, Mon-Sun).
 - Totals: sales (cash/credit split), expenses, payments received, new debts.
-- CSV export (download via blob; works offline).
+- CSV export (download via blob; works offline): full transaction list for the week, followed by totals rows at the end.
 
 ## 4. Calculations (exact definitions)
 
@@ -102,7 +102,7 @@ dashboard, list, and reports; no per-screen re-implementations.
 - Credit sale: customer name required, 1-40 chars; duplicates merged by
   case-insensitive match (suggest existing customer).
 - Expense: category required.
-- Date: required, not in the future, no earlier than 1 year ago.
+- Date: required, never in the future (today is the latest), no earlier than 1 year ago.
 - Payment: customer required; amount may exceed outstanding (overpayment
   allowed, shown as "advance").
 
@@ -125,14 +125,13 @@ dashboard, list, and reports; no per-screen re-implementations.
 - No eval, no third-party scripts, no analytics in v1.
 - Service worker caches app shell only; data never leaves IndexedDB.
 
-## 8. Open questions for owner review
+## 8. Owner review decisions (2026-10-14)
 
-1. Future dates blocked entirely, or allow up to +1 day for late-night entry?
-   **Draft proposal: allow up to +1 day (past midnight entry).**
-2. Deleting a transaction that was a credit sale keeps the customer - OK?
-   **Draft proposal: yes; customers are never auto-deleted.**
-3. CSV export: plain totals, or full transaction list per week?
-   **Draft proposal: full transaction list (more useful, no extra cost).**
+| Question | Decision |
+|----------|----------|
+| Future dates? | **Blocked entirely.** Today is the latest allowed date; no +1 day allowance. |
+| Deleting a credit sale transaction? | **Customer record (name) stays; only the transaction figure is deleted.** Customers are never auto-deleted. |
+| CSV scope? | **Full transaction list for the week, with totals at the end.** |
 
 ---
 *Prepared by the AI agent for owner review. Implementation begins only after approval.*
