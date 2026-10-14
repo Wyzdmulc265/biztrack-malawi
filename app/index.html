@@ -3,39 +3,102 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="BizTrack Malawi - an offline-first financial tracker for Malawian small businesses. Under construction.">
+  <meta name="description" content="BizTrack Malawi - an offline-first financial tracker for Malawian small businesses.">
   <title>BizTrack Malawi</title>
-  <style>
-    :root { color-scheme: light dark; }
-    body {
-      margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #f7f7f5; color: #1a1a1a;
-    }
-    .card {
-      max-width: 420px; margin: 24px; padding: 40px 32px; text-align: center;
-      background: #fff; border-radius: 12px; border: 1px solid #e5e5e0;
-    }
-    h1 { font-size: 1.6rem; margin: 0 0 8px; }
-    p { color: #666; line-height: 1.5; margin: 0 0 20px; }
-    .status {
-      display: inline-block; padding: 6px 14px; border-radius: 999px;
-      background: #f0f4e8; color: #3d5a1f; font-size: 0.85rem; font-weight: 600;
-    }
-    ul { text-align: left; color: #444; font-size: 0.9rem; line-height: 1.9; margin: 0 auto; display: inline-block; }
-  </style>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-  <main class="card">
+  <header class="topbar">
     <h1>BizTrack Malawi</h1>
-    <p>An offline-first financial tracker for Malawian small businesses.</p>
-    <span class="status">Under construction</span>
-    <ul>
-      <li>Dashboard</li>
-      <li>Add Transaction</li>
-      <li>Transactions</li>
-      <li>Reports</li>
-    </ul>
+  </header>
+
+  <main>
+    <!-- Dashboard (stub until later in Stage 3) -->
+    <section id="dashboard-screen" hidden>
+      <div class="card stub">
+        <p>Dashboard arrives later in Stage 3, after transaction entry and history are solid.</p>
+      </div>
+    </section>
+
+    <!-- Add Transaction -->
+    <section id="add-screen">
+      <div class="card">
+        <div class="seg" role="tablist" aria-label="Transaction type">
+          <button type="button" class="seg-btn active" data-type="cash_sale">Cash sale</button>
+          <button type="button" class="seg-btn" data-type="credit_sale">Credit sale</button>
+          <button type="button" class="seg-btn" data-type="expense">Expense</button>
+        </div>
+
+        <div class="field">
+          <label for="amount">Amount (MK)</label>
+          <input id="amount" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
+          <p class="err" id="amount-err" hidden></p>
+        </div>
+
+        <div class="field" id="customer-field" hidden>
+          <label for="customer">Customer</label>
+          <input id="customer" type="text" placeholder="Customer name" list="customer-list" autocomplete="off" maxlength="40">
+          <datalist id="customer-list"></datalist>
+          <p class="err" id="customer-err" hidden></p>
+        </div>
+
+        <div class="field" id="category-field" hidden>
+          <label for="category">Category</label>
+          <select id="category"></select>
+          <button type="button" id="add-cat-btn" class="link-btn">+ Add category</button>
+          <div id="add-cat-row" hidden>
+            <input id="new-cat" type="text" placeholder="New category name" maxlength="40">
+            <button type="button" id="new-cat-save" class="btn small">Add</button>
+          </div>
+          <p class="err" id="category-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="date">Date</label>
+          <input id="date" type="date">
+          <p class="err" id="date-err" hidden></p>
+        </div>
+
+        <div class="field">
+          <label for="note">Note (optional)</label>
+          <textarea id="note" rows="2" maxlength="200"></textarea>
+        </div>
+
+        <button type="button" id="save-btn" class="btn primary">Save</button>
+        <div id="storage-error" class="banner" hidden>Could not save. Storage unavailable or full - your entry is preserved, try again.</div>
+      </div>
+    </section>
+
+    <!-- Transactions list (minimal version: verifies entries persist) -->
+    <section id="list-screen" hidden>
+      <div class="card">
+        <h2>Transactions</h2>
+        <p id="list-empty" hidden class="muted">No transactions yet. Add your first one.</p>
+        <ul id="tx-list" class="tx-list"></ul>
+      </div>
+    </section>
+
+    <!-- Reports (stub) -->
+    <section id="reports-screen" hidden>
+      <div class="card stub">
+        <p>Reports arrive later in Stage 3.</p>
+      </div>
+    </section>
   </main>
+
+  <div id="toast" hidden></div>
+
+  <nav class="bottomnav">
+    <button class="nav-btn" data-screen="dashboard">Home</button>
+    <button class="nav-btn active" data-screen="add">+ Add</button>
+    <button class="nav-btn" data-screen="list">List</button>
+    <button class="nav-btn" data-screen="reports">Reports</button>
+  </nav>
+
+  <script src="./js/db.js"></script>
+  <script src="./js/money.js"></script>
+  <script src="./js/app.js"></script>
 </body>
 </html>

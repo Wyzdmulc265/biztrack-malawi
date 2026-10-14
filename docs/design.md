@@ -16,7 +16,7 @@ storage, service worker for offline launch. Nothing else.
 ### 2.1 Storage rule: integer tambala
 
 All amounts are stored as **integers in tambala** (1 kwacha = 100 tambala).
-MK85,000.50 becomes `85000050`. Floats are never used for money. Conversion
+MK85,000.50 becomes `8500050`. Floats are never used for money. Conversion
 happens exactly twice: at input (string -> integer) and at display
 (integer -> formatted string). Both use string/safe-integer math only.
 
