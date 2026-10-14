@@ -120,3 +120,13 @@ h2 { font-size: 1rem; margin: 0 0 12px; }
 .modal-card h3 { margin: 0 0 4px; font-size: 1.05rem; }
 
 .modal[hidden] { display: none; }
+
+/* Feature 5: reports */
+.week-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.week-nav h2 { margin: 0; flex: 1; text-align: center; }
+.week-nav button {
+  min-width: 44px; min-height: 44px; border: 1px solid #d8d8d0; background: #fff;
+  border-radius: 8px; font-size: 1.3rem; color: #1a5c2e; cursor: pointer;
+}
+.week-nav button:disabled { opacity: 0.35; cursor: default; }
+#csv-btn { margin-top: 12px; }
