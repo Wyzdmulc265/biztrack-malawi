@@ -118,3 +118,5 @@ h2 { font-size: 1rem; margin: 0 0 12px; }
   width: 100%; max-width: 520px;
 }
 .modal-card h3 { margin: 0 0 4px; font-size: 1.05rem; }
+
+.modal[hidden] { display: none; }
