@@ -1,7 +1,7 @@
 # BizTrack Malawi - Stage 1: Requirements Document
 
-**Version:** 0.1 (draft for owner review)
-**Status:** Awaiting approval
+**Version:** 0.2 (owner review decisions incorporated)
+**Status:** Awaiting final approval to lock as v1.0
 **Date:** 2026-10-14
 
 ---
@@ -44,6 +44,7 @@ to capture transactions and turn them into useful information.
 - Today's financial summary (dashboard)
 - Searchable transaction history
 - Weekly report with CSV export
+- Editable expense categories (sensible defaults provided)
 - Full offline operation; data stays on the device
 
 **Out of scope (v1, revisited later):**
@@ -58,15 +59,16 @@ to capture transactions and turn them into useful information.
 | ID | Requirement | Testable acceptance criterion |
 |----|-------------|-------------------------------|
 | FR-1 | Record a transaction with type (cash sale, credit sale, expense), amount, category, date, optional note | A cash sale can be recorded in under 30 seconds on a phone |
-| FR-2 | Validate input: amount must be a positive whole number of kwacha; type and date required; date defaults to today | Invalid input is rejected with a clear message; no bad data is stored |
+| FR-2 | Validate input: amount must be a positive number with at most two decimal places (kwacha and tambala); type and date required; date defaults to today | Invalid input is rejected with a clear message; no bad data is stored; amounts with more than two decimals are rejected |
 | FR-3 | A credit sale requires a customer name and is recorded against that customer | Credit sale appears in the customer's outstanding balance |
-| FR-4 | Record a payment received from a customer; it reduces that customer's outstanding balance | Paying 20,000 against 35,000 total leaves 15,000 outstanding |
+| FR-4 | Record a payment received from a customer; it reduces that customer's outstanding balance | Paying MK20,000.00 against MK35,000.00 total leaves MK15,000.00 outstanding |
 | FR-5 | Transactions list, newest first, searchable by text, filterable by type and date | Owner can find a specific transaction within 10 seconds |
 | FR-6 | Edit or delete a transaction, with confirmation; summaries recalculate | Editing an amount updates all affected figures immediately |
 | FR-7 | Dashboard shows today's totals: sales, expenses, net cash movement, total outstanding customer balances | Figures match the transactions recorded for that date |
 | FR-8 | Credit sales are counted as sales but NOT as cash received | Cash movement excludes credit sales; outstanding balances include them |
 | FR-9 | Weekly report: totals for sales, expenses, stock purchases, debts incurred, payments received; exportable as CSV | Exported file opens correctly in Excel/LibreOffice |
 | FR-10 | The application works fully offline, including adding a first transaction with no connectivity | All FR-1 to FR-9 pass with airplane mode on |
+| FR-11 | The expense category list is user-editable: the owner can add new categories; default categories are provided; the editing flow must be discoverable from the transaction entry screen | Owner can add a category (e.g. "Packaging") and immediately use it for a new expense |
 
 ## 6. Non-functional requirements
 
@@ -76,7 +78,7 @@ to capture transactions and turn them into useful information.
 | NFR-2 | Dashboard renders in under 2 seconds on a mid-range phone |
 | NFR-3 | All data stays on the device. No network transmission of transaction data in v1. |
 | NFR-4 | The app must never present cash movement as profit. Where a figure could be misread as profit, label it explicitly as cash movement and note that it is not profit. |
-| NFR-5 | Amounts are whole Malawi Kwacha (no tambala decimals); formatted with thousands separators (e.g. MK85,000) |
+| NFR-5 | Amounts are in Malawi Kwacha with tambala supported (up to two decimal places), because mobile money transactions include tambala. Formatted with thousands separators: MK85,000.50 |
 | NFR-6 | Dates are local to the device; "today" means the device's local date |
 | NFR-7 | Installable as a home-screen app (PWA); launches offline via service worker |
 | NFR-8 | English interface in v1; Chichewa localisation deferred |
@@ -89,12 +91,15 @@ to capture transactions and turn them into useful information.
 4. Everything above works in airplane mode, from first launch.
 5. A weekly report can be exported as CSV.
 6. No figure displayed anywhere misrepresents cash movement as profit.
+7. The owner can add an expense category without leaving the entry flow.
 
-## 8. Open questions for owner review
+## 8. Owner review decisions (2026-10-14)
 
-1. Should the expense categories be a fixed list (stock purchase, transport, utilities, salaries, other) or user-editable? **Draft proposal: fixed list in v1, "other" as catch-all.**
-2. Should a cash sale be able to reference a customer (e.g. for a returning customer paying cash)? **Draft proposal: no in v1; keep entry minimal.**
-3. Confirm: currency formatting with commas (MK85,000) matches local habit?
+| Question | Decision |
+|----------|----------|
+| Expense categories fixed or editable? | **Editable** - user can add categories; defaults provided; editing flow visible from the entry screen |
+| Customer names on cash sales? | **No** - cash sales stay minimal, no name field |
+| Tambala decimals? | **Included** - two decimal places supported, driven by mobile money amounts |
 
 ---
-*Prepared by the AI agent for owner review. No implementation begins until this document is approved.*
+*Prepared by the AI agent for owner review. No implementation begins until this document is approved and locked.*
