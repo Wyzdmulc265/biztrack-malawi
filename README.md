@@ -16,18 +16,38 @@ lead to cash shortages even when the business is making sales.
 4. Cash is not profit - the app must never present cash movement as accounting profit.
 5. Document everything - the commit history is part of the project's evidence.
 
-## Status
-- [x] Problem research and scope (Stage 0)
-- [x] Requirements document (Stage 1) - locked v1.0
-- [x] Design document (Stage 2) - locked v1.0
-- [ ] Stage 3: feature-by-feature build - in progress
-- [ ] Architecture: static PWA, HTML/CSS/JS, IndexedDB, service worker, device-only storage in v1
-- [ ] Hosting plan: this repo, auto-deployed via Cloudflare Pages
+## How it was built - the AI-directed process
 
-## Repository layout (planned)
-- `docs/` - requirements, decision log, test plans
-- `app/` - the application itself
-- `tests/` - independent calculation tests
+| Stage | What happened |
+|-------|---------------|
+| 0. Research | Problem validated against Malawian SME finance sources (docs/references.md) |
+| 1. Requirements | Locked v1.0, amended v1.1 after owner review (docs/requirements.md) |
+| 2. Design | Locked v1.0/v1.1 - data model, screens, failure handling (docs/design.md) |
+| 3. Build | 5 features, one commit each, developed on `develop`, merged via owner-approved PRs |
+| 4. Independent testing | 40 hand-computed assertions, zero dependencies (tests/calc.test.js) |
+| 5. Security review | 2 findings fixed - CSV formula injection, missing CSP headers (docs/security-review.md) |
+| 6. Launch | Merged to `main`, auto-deployed by Cloudflare Pages |
 
-_This repository is the documentation trail for a LinkedIn post series on
-AI-directed engineering._
+Every stage was gated by human approval before execution. Prompting for code
+was step five - not step one.
+
+## Run the app
+
+Production: https://biztrack-malawi.pages.dev
+
+Locally (service workers need http://localhost):
+
+    python3 -m http.server -d app 8000
+
+## Run the tests
+
+    node tests/calc.test.js
+
+## Repository layout
+
+- `docs/` - requirements, design, decision log, security review, references
+- `app/` - the application (offline-first PWA: HTML/CSS/JS, IndexedDB, service worker)
+- `tests/` - independent calculation and money-module tests
+
+_BizTrack Malawi is v1.0, launched October 2026. This repository is the
+documentation trail for a LinkedIn post series on AI-directed engineering._

@@ -439,7 +439,12 @@ $('#week-next').addEventListener('click', () => {
 
 // --- CSV export (D15: full list, then totals) ---
 function csvField(v) {
-  return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  let s = String(v == null ? '' : v);
+  // Stage 5 security fix: CSV formula injection. A field starting with
+  // = + - @ could execute as a formula in Excel/Sheets. Prefix with ' so
+  // spreadsheet apps treat it as plain text (OWASP mitigation).
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return '"' + s.replace(/"/g, '""') + '"';
 }
 function amountToCsv(amountT) {
   const t = Math.abs(amountT);
