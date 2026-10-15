@@ -4,7 +4,7 @@
 // All arithmetic is integer tambala - no floats.
 'use strict';
 
-// Totals for a single local date (YYYY-MM-DD).
+// Totals for a date range [startISO, endISO], inclusive (YYYY-MM-DD).
 // sales = cash + credit sales. cashMovement = cash sales + payments - expenses (FR-8 v1.1:
 // credit sales are sales but NOT cash received).
 function totalsForRange(txs, startISO, endISO) {
