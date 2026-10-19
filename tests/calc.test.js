@@ -15,7 +15,7 @@ const src =
   fs.readFileSync(path.join(__dirname, '..', 'app', 'js', 'calc.js'), 'utf8');
 const ctx = vm.createContext({});
 vm.runInContext(src, ctx);
-const { parseAmountT, formatMK, totalsForRange, totalsForDate, outstandingByCustomer, totalOutstanding } = ctx;
+const { parseAmountT, formatMK, totalsForRange, totalsForDate, outstandingByCustomer, totalOutstanding, cashflowForRange, payablesBySupplier, totalPayable } = ctx;
 
 let pass = 0, fail = 0;
 function eq(name, actual, expected) {
@@ -119,6 +119,45 @@ console.log('--- calc: empty database ---');
 const z = totalsForRange([], '2026-10-12', '2026-10-18');
 eq('empty db -> all zeros', [z.sales, z.expenses, z.payments, z.cashMovement], [0, 0, 0, 0]);
 eq('empty db -> no outstanding', totalOutstanding([]), 0);
+
+// Hand-computed v1.2 scenario (all tambala):
+//   inflow  = cash sale 100000 + debt received 500000 = 600000
+//   outflow = money out 35050 + supplier payment 75000 = 110050
+//   net cashflow = 489950
+//   credit sale 800000 and credit purchase 200000 move NO cash
+//   supplier S: owed 200000 - paid 75000 = 125000 payable
+//   supplier T: purchase 300000 - paid 350000 = -50000 (advance)
+//   total payable = 125000 (advance excluded)
+const TX2 = [
+  { type: 'cash_sale', amountT: 100000, date: '2026-10-13' },
+  { type: 'credit_sale', amountT: 800000, date: '2026-10-13', customerId: 'A' },
+  { type: 'payment', amountT: 500000, date: '2026-10-14', customerId: 'A' },
+  { type: 'expense', amountT: 35050, date: '2026-10-15' },
+  { type: 'supplier_payment', amountT: 75000, date: '2026-10-16', supplierId: 'S' },
+  { type: 'credit_purchase', amountT: 200000, date: '2026-10-17', supplierId: 'S' }
+];
+console.log('--- calc v1.2: cashflow view (D18) ---');
+const cf = cashflowForRange(TX2, '2026-10-12', '2026-10-18');
+eq('v1.2 inflow = cash sales + debt received', cf.inflow, 600000);
+eq('v1.2 outflow = money out + supplier payments', cf.outflow, 110050);
+eq('v1.2 net cashflow', cf.netCashflow, 489950);
+eq('v1.2 credit sale is NOT inflow (receivable, not cash)', cf.inflow, 600000);
+eq('v1.2 credit purchase is NOT outflow (payable, not cash)', cf.outflow, 110050);
+eq('v1.2 customer balance still works (800000 - 500000)', outstandingByCustomer(TX2).A, 300000);
+
+console.log('--- calc v1.2: payables (D19) ---');
+const TX3 = TX2.concat([
+  { type: 'credit_purchase', amountT: 300000, date: '2026-10-13', supplierId: 'T' },
+  { type: 'supplier_payment', amountT: 350000, date: '2026-10-14', supplierId: 'T' }
+]);
+const pb = payablesBySupplier(TX3);
+eq('supplier S balance: owes 125000', pb.S, 125000);
+eq('supplier T overpaid -> advance of 50000', pb.T, -50000);
+eq('total payable excludes supplier advances', totalPayable(TX3), 125000);
+eq('payable-only supplier with no purchases excluded', totalPayable([
+  { type: 'supplier_payment', amountT: 700000, date: '2026-10-14', supplierId: 'U' }
+]), 0);
+eq('empty db -> no payables', [totalPayable([])], [0]);
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 if (fail > 0) process.exit(1);

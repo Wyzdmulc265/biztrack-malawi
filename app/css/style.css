@@ -13,10 +13,10 @@ main { padding: 16px; max-width: 520px; margin: 0 auto; }
 
 h2 { font-size: 1rem; margin: 0 0 12px; }
 
-.seg { display: flex; gap: 6px; margin-bottom: 16px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
 .seg-btn {
-  flex: 1; min-height: 44px; border: 1px solid #d8d8d0; background: #fff;
-  border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: #444;
+  flex: 1 1 30%; min-height: 44px; border: 1px solid #d8d8d0; background: #fff;
+  border-radius: 8px; font-size: 0.8rem; font-weight: 600; color: #444; padding: 0 4px;
 }
 .seg-btn.active { background: #1a5c2e; border-color: #1a5c2e; color: #fff; }
 

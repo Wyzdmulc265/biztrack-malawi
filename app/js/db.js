@@ -1,9 +1,9 @@
 // BizTrack Malawi - IndexedDB wrapper (design v1.0, section 2)
-// Minimal promisified API. Three stores: transactions, customers, categories.
+// Minimal promisified API. Four stores: transactions, customers, suppliers, categories.
 'use strict';
 
 const DB_NAME = 'biztrack';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const DEFAULT_CATEGORIES = ['Stock purchase', 'Transport', 'Utilities', 'Salaries', 'Rent', 'Other'];
 
 let _db = null;
@@ -24,6 +24,10 @@ function openDB() {
       if (!db.objectStoreNames.contains('customers')) {
         const cu = db.createObjectStore('customers', { keyPath: 'id' });
         cu.createIndex('name', 'name', { unique: true });
+      }
+      if (!db.objectStoreNames.contains('suppliers')) {
+        const su = db.createObjectStore('suppliers', { keyPath: 'id' });
+        su.createIndex('name', 'name', { unique: true });
       }
       if (!db.objectStoreNames.contains('categories')) {
         db.createObjectStore('categories', { keyPath: 'id' });

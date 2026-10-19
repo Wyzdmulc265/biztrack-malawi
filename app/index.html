@@ -20,22 +20,27 @@
       <div class="card">
         <h2 id="dash-title">Today</h2>
         <div class="stat">
-          <p class="stat-label">Sales (cash + credit)</p>
-          <p class="stat-value" id="stat-sales">MK0.00</p>
-          <p class="stat-sub" id="stat-sales-sub">cash MK0.00 / credit MK0.00</p>
+          <p class="stat-label">Cash in today (inflow)</p>
+          <p class="stat-value" id="stat-inflow">MK0.00</p>
+          <p class="stat-sub" id="stat-inflow-sub">cash sales MK0.00 / debt received MK0.00</p>
         </div>
         <div class="stat">
-          <p class="stat-label">Expenses</p>
-          <p class="stat-value" id="stat-expenses">MK0.00</p>
+          <p class="stat-label">Cash out today (outflow)</p>
+          <p class="stat-value" id="stat-outflow">MK0.00</p>
+          <p class="stat-sub" id="stat-outflow-sub">money out MK0.00 / supplier payments MK0.00</p>
         </div>
         <div class="stat">
-          <p class="stat-label">Net cash movement today</p>
-          <p class="stat-value" id="stat-cash">MK0.00</p>
-          <p class="stat-sub">Cash sales plus debt payments received, minus expenses. This is money movement, not profit.</p>
+          <p class="stat-label">Net cashflow today</p>
+          <p class="stat-value" id="stat-net">MK0.00</p>
+          <p class="stat-sub">Cash that actually moved. This is money movement, not profit.</p>
         </div>
         <div class="stat">
           <p class="stat-label">Customers owe you (total)</p>
           <p class="stat-value" id="stat-outstanding">MK0.00</p>
+        </div>
+        <div class="stat">
+          <p class="stat-label">You owe suppliers (total)</p>
+          <p class="stat-value" id="stat-payable">MK0.00</p>
         </div>
         <p id="dash-empty" class="muted" hidden>No transactions yet today. Tap + Add to record your first.</p>
       </div>
@@ -43,6 +48,11 @@
         <h3>Customers who owe you</h3>
         <p id="cust-empty" class="muted" hidden>No credit sales yet. Credit sales appear here with each customer's balance.</p>
         <ul id="cust-list" class="cust-list"></ul>
+      </div>
+      <div class="card">
+        <h3>You owe suppliers</h3>
+        <p id="supp-empty" class="muted" hidden>No credit purchases yet. Credit purchases appear here with each supplier's balance.</p>
+        <ul id="supp-list" class="cust-list"></ul>
       </div>
     </section>
 
@@ -52,7 +62,10 @@
         <div class="seg" role="tablist" aria-label="Transaction type">
           <button type="button" class="seg-btn active" data-type="cash_sale">Cash sale</button>
           <button type="button" class="seg-btn" data-type="credit_sale">Credit sale</button>
-          <button type="button" class="seg-btn" data-type="expense">Expense</button>
+          <button type="button" class="seg-btn" data-type="payment">Debt received</button>
+          <button type="button" class="seg-btn" data-type="expense">Money out</button>
+          <button type="button" class="seg-btn" data-type="credit_purchase">Credit purchase</button>
+          <button type="button" class="seg-btn" data-type="supplier_payment">Supplier payment</button>
         </div>
 
         <div class="field">
@@ -66,6 +79,13 @@
           <input id="customer" type="text" placeholder="Customer name" list="customer-list" autocomplete="off" maxlength="40">
           <datalist id="customer-list"></datalist>
           <p class="err" id="customer-err" hidden></p>
+        </div>
+
+        <div class="field" id="supplier-field" hidden>
+          <label for="supplier">Supplier</label>
+          <input id="supplier" type="text" placeholder="Supplier name" list="supplier-list" autocomplete="off" maxlength="40">
+          <datalist id="supplier-list"></datalist>
+          <p class="err" id="supplier-err" hidden></p>
         </div>
 
         <div class="field" id="category-field" hidden>
@@ -106,8 +126,10 @@
             <option value="all">All types</option>
             <option value="cash_sale">Cash sales</option>
             <option value="credit_sale">Credit sales</option>
-            <option value="expense">Expenses</option>
-            <option value="payment">Payments</option>
+            <option value="payment">Debt received</option>
+            <option value="expense">Money out</option>
+            <option value="credit_purchase">Credit purchases</option>
+            <option value="supplier_payment">Supplier payments</option>
           </select>
           <select id="filter-range" aria-label="Filter by date">
             <option value="all">All time</option>
@@ -131,21 +153,18 @@
           <button type="button" id="week-next" aria-label="Next week">&#8250;</button>
         </div>
         <div class="stat">
-          <p class="stat-label">Sales (cash + credit)</p>
-          <p class="stat-value" id="rep-sales">MK0.00</p>
-          <p class="stat-sub" id="rep-sales-sub">cash MK0.00 / credit MK0.00</p>
+          <p class="stat-label">Inflow (cash in)</p>
+          <p class="stat-value" id="rep-inflow">MK0.00</p>
+          <p class="stat-sub" id="rep-inflow-sub">cash sales MK0.00 / debt received MK0.00</p>
         </div>
         <div class="stat">
-          <p class="stat-label">Expenses</p>
-          <p class="stat-value" id="rep-expenses">MK0.00</p>
+          <p class="stat-label">Outflow (cash out)</p>
+          <p class="stat-value" id="rep-outflow">MK0.00</p>
+          <p class="stat-sub" id="rep-outflow-sub">money out MK0.00 / supplier payments MK0.00</p>
         </div>
         <div class="stat">
-          <p class="stat-label">Payments received</p>
-          <p class="stat-value" id="rep-payments">MK0.00</p>
-        </div>
-        <div class="stat">
-          <p class="stat-label">Net cash movement</p>
-          <p class="stat-value" id="rep-cash">MK0.00</p>
+          <p class="stat-label">Net cashflow</p>
+          <p class="stat-value" id="rep-net">MK0.00</p>
           <p class="stat-sub">Money movement, not profit.</p>
         </div>
         <p id="rep-empty" class="muted" hidden>No transactions in this week.</p>

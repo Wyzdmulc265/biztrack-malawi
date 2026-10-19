@@ -103,3 +103,22 @@ to capture transactions and turn them into useful information.
 
 ---
 This document is locked as v1.0. Changes require a new version and explicit owner approval.
+
+
+---
+
+## v1.2 Amendment (2026-10-19, owner-approved)
+
+The app is a **cashflow tracker**. Terminology now follows cashflow terms throughout:
+
+- **FR-10:** The dashboard and reports use **inflow** (cash sales + debt received),
+  **outflow** (money out + supplier payments), and **net cashflow**. "Expense" is
+  renamed **Money out** (stock purchases, bills, any spending). Credit sales and
+  credit purchases move no cash and never appear in inflow/outflow.
+- **FR-11 (payables tracking):** The owner can record **credit purchases**
+  (bought on credit, creates a payable) and **supplier payments** (cash paid to a
+  supplier), view per-supplier balances on a "You owe suppliers" dashboard card,
+  and overpayment shows as "paid ahead" - mirroring the customer receivables flow.
+- **FR-12:** The transactions list and CSV use a unified **Party** column
+  (customer or supplier) and the six transaction types.
+- Existing data is unchanged; recorded "expense" transactions display as Money out.
