@@ -122,3 +122,22 @@ The app is a **cashflow tracker**. Terminology now follows cashflow terms throug
 - **FR-12:** The transactions list and CSV use a unified **Party** column
   (customer or supplier) and the six transaction types.
 - Existing data is unchanged; recorded "expense" transactions display as Money out.
+
+
+---
+
+## v1.3 Amendment (2026-10-19, owner-approved)
+
+- **D22 - Dashboard cards:** Net cashflow is a hero card with a 7-day trend strip
+  (CSS-only bars). Inflow/outflow and the two debt totals render as card pairs in
+  a 2-column grid, with cash-in (green) and cash-out (red-brown) accent edges.
+- **Validation rules (all owner-approved):**
+  - **V1:** Debt received and supplier payments are only accepted for existing
+    customers/suppliers. New parties are created by credit sales / credit
+    purchases - the transaction where the debt begins.
+  - **V2:** Overpayments warn and require confirmation ("will be recorded as paid ahead").
+  - **V3:** Duplicate entries (same type, amount, party, date within 60s) ask before saving.
+  - **V4:** Single entries above MK1,000,000 ask for confirmation.
+  - **V5:** Dates older than a week show a notice (never a block).
+  - **V6:** Changing a transaction's type during edit requires confirmation.
+  - **V7:** Names are trimmed, whitespace-collapsed, and all-numeric names rejected.

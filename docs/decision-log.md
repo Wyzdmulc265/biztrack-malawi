@@ -41,3 +41,15 @@ instead of a destructive button next to everyday taps. Owner approved.
 Light theme only (no dark mode in this release); typographic app icon; the four
 proposed redesign phases are combined and built as two phases: (A) cashflow +
 payables feature, (B) combined UI/UX redesign. Owner approved.
+
+
+## D22 - Dashboard cards (2026-10-19)
+Dashboard rebuilt as tiles: hero net-cashflow card with a 7-day CSS-only trend
+strip, 2-column grid pairing inflow/outflow and the receivable/payable totals,
+accent edges for cash in (green) / cash out (red-brown). Owner approved.
+
+## D23 - Validation rules V1-V7 (2026-10-19)
+Input validation set adopted: existing-party-only debt received/supplier payments
+(V1), overpayment confirm (V2), duplicate guard (V3), large-amount confirm (V4),
+old-date notice (V5), edit-type confirm (V6), name hygiene (V7). Every gate asks,
+none silently blocks. Pure helpers live in validation.js and are unit-tested.

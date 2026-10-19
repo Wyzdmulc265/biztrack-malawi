@@ -101,6 +101,17 @@ async function getOrCreateCustomer(name) {
   return id;
 }
 
+async function findCustomerByName(name) {
+  const list = await dbGetAll('customers');
+  const hit = list.find((c) => c.name.toLowerCase() === name.toLowerCase());
+  return hit ? hit.id : null;
+}
+async function findSupplierByName(name) {
+  const list = await dbGetAll('suppliers');
+  const hit = list.find((c) => c.name.toLowerCase() === name.toLowerCase());
+  return hit ? hit.id : null;
+}
+
 // --- suppliers (v1.2, D19: payables tracking) ---
 async function loadSuppliers() {
   const list = await dbGetAll('suppliers');
@@ -132,16 +143,28 @@ $('#save-btn').addEventListener('click', async () => {
 
   let customerId = null;
   if (currentType === 'credit_sale' || currentType === 'payment') {
-    const name = $('#customer').value.trim();
-    if (!name) return showError('customer', 'Customer name is required');
-    customerId = await getOrCreateCustomer(name);
+    const name = normalizeName($('#customer').value); // V7
+    if (!name.ok) return showError('customer', name.error);
+    if (currentType === 'payment') {
+      // V1: debt received only for existing customers - a debt begins with a credit sale
+      customerId = await findCustomerByName(name.value);
+      if (!customerId) return showError('customer', 'Debt received needs an existing customer. Record the credit sale first.');
+    } else {
+      customerId = await getOrCreateCustomer(name.value);
+    }
   }
 
   let supplierId = null;
   if (currentType === 'credit_purchase' || currentType === 'supplier_payment') {
-    const name = $('#supplier').value.trim();
-    if (!name) return showError('supplier', 'Supplier name is required');
-    supplierId = await getOrCreateSupplier(name);
+    const name = normalizeName($('#supplier').value); // V7
+    if (!name.ok) return showError('supplier', name.error);
+    if (currentType === 'supplier_payment') {
+      // V1: supplier payments only for existing suppliers
+      supplierId = await findSupplierByName(name.value);
+      if (!supplierId) return showError('supplier', 'Supplier payment needs an existing supplier. Record the credit purchase first.');
+    } else {
+      supplierId = await getOrCreateSupplier(name.value);
+    }
   }
 
   let categoryId = null;
@@ -166,6 +189,29 @@ $('#save-btn').addEventListener('click', async () => {
     createdAt: existing ? existing.createdAt : now,
     updatedAt: now
   };
+
+  // v1.3 validation gates (V2-V6): every rule asks, none silently blocks
+  if (editingId && existing && existing.type !== currentType) {
+    if (!confirm('Changing the type moves balances. Save with the new type?')) return; // V6
+  }
+  if (!editingId) {
+    const all = await dbGetAll('transactions');
+    if (isLikelyDuplicate(tx, all, now) &&
+        !confirm('This looks like a duplicate of an entry saved in the last minute. Save anyway?')) return; // V3
+  }
+  if (isLargeAmount(amount.amountT) &&
+      !confirm('Large amount: ' + formatMK(amount.amountT) + '. Save anyway?')) return; // V4
+  if (isOldDate(date, TODAY) &&
+      !confirm('This date is more than a week old. Keep this date?')) return; // V5
+  if (currentType === 'payment' || currentType === 'supplier_payment') {
+    const all = await dbGetAll('transactions');
+    const base = editingId ? all.filter((x) => x.id !== editingId) : all;
+    const bal = currentType === 'payment'
+      ? (outstandingByCustomer(base)[customerId] || 0)
+      : (payablesBySupplier(base)[supplierId] || 0);
+    if (amount.amountT > bal &&
+        !confirm(formatMK(amount.amountT - bal) + ' more than owed - it will be recorded as paid ahead. Save anyway?')) return; // V2
+  }
 
   saving = true;
   $('#save-btn').disabled = true;
@@ -202,6 +248,16 @@ async function renderDashboard() {
   $('#stat-net').textContent = formatMK(cf.netCashflow);
   $('#stat-outstanding').textContent = formatMK(totalOutstanding(txs));
   $('#stat-payable').textContent = formatMK(totalPayable(txs));
+  // v1.3 (D22): 7-day cashflow trend strip - CSS-only bars, no chart library
+  const days = [];
+  for (let i = 6; i >= 0; i--) days.push(localISO(new Date(Date.now() - i * 86400000)));
+  const nets = days.map((d) => cashflowForRange(txs, d, d).netCashflow);
+  const maxAbs = Math.max(10000, ...nets.map(Math.abs));
+  $('#trend').innerHTML = days.map((d, i) =>
+    '<div class="bar' + (nets[i] < 0 ? ' neg' : '') + '" style="height:' +
+    Math.max(5, Math.round(Math.abs(nets[i]) / maxAbs * 100)) +
+    '%" title="' + d + ': ' + formatMK(nets[i]) + '"></div>').join('');
+
   const hasToday = txs.some((x) => x.date === TODAY);
   $('#dash-empty').hidden = hasToday;
   $('#dash-add-btn').hidden = hasToday;
@@ -289,6 +345,15 @@ $('#pay-save').addEventListener('click', async () => {
 
   const isCustomer = payingParty.mode === 'customer';
   const now = Date.now();
+  // V2: overpayment confirm (modal shows the balance, this catches the amount)
+  {
+    const all = await dbGetAll('transactions');
+    const bal = isCustomer
+      ? (outstandingByCustomer(all)[payingParty.id] || 0)
+      : (payablesBySupplier(all)[payingParty.id] || 0);
+    if (amount.amountT > bal &&
+        !confirm(formatMK(amount.amountT - bal) + ' more than owed - it will be recorded as paid ahead. Save anyway?')) return;
+  }
   const tx = {
     id: uuid(),
     type: isCustomer ? 'payment' : 'supplier_payment',

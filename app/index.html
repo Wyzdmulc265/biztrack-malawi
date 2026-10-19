@@ -18,34 +18,34 @@
   <main>
     <!-- Dashboard (FR-7, FR-8, NFR-4) -->
     <section id="dashboard-screen" hidden>
-      <div class="card">
-        <h2 id="dash-title">Today</h2>
-        <div class="stat">
-          <p class="stat-label">Cash in today (inflow)</p>
+      <div class="card hero">
+        <p class="stat-label">Net cashflow today</p>
+        <p class="stat-value" id="stat-net">MK0.00</p>
+        <p class="stat-sub">Cash that actually moved. Not profit.</p>
+        <div id="trend" class="trend" aria-hidden="true"></div>
+      </div>
+      <div class="grid2">
+        <div class="card accent-in">
+          <p class="stat-label">Cash in (inflow)</p>
           <p class="stat-value" id="stat-inflow">MK0.00</p>
           <p class="stat-sub" id="stat-inflow-sub">cash sales MK0.00 / debt received MK0.00</p>
         </div>
-        <div class="stat">
-          <p class="stat-label">Cash out today (outflow)</p>
+        <div class="card accent-out">
+          <p class="stat-label">Cash out (outflow)</p>
           <p class="stat-value" id="stat-outflow">MK0.00</p>
           <p class="stat-sub" id="stat-outflow-sub">money out MK0.00 / supplier payments MK0.00</p>
         </div>
-        <div class="stat stat-hero">
-          <p class="stat-label">Net cashflow today</p>
-          <p class="stat-value" id="stat-net">MK0.00</p>
-          <p class="stat-sub">Cash that actually moved. This is money movement, not profit.</p>
-        </div>
-        <div class="stat">
-          <p class="stat-label">Customers owe you (total)</p>
+        <div class="card">
+          <p class="stat-label">Customers owe you</p>
           <p class="stat-value" id="stat-outstanding">MK0.00</p>
         </div>
-        <div class="stat">
-          <p class="stat-label">You owe suppliers (total)</p>
+        <div class="card">
+          <p class="stat-label">You owe suppliers</p>
           <p class="stat-value" id="stat-payable">MK0.00</p>
         </div>
-        <p id="dash-empty" class="muted" hidden>No transactions yet today.</p>
-        <button type="button" id="dash-add-btn" class="btn small" hidden>Add first transaction</button>
       </div>
+      <p id="dash-empty" class="muted" hidden>No transactions yet today.</p>
+      <button type="button" id="dash-add-btn" class="btn small" hidden>Add first transaction</button>
       <div class="card">
         <h3>Customers who owe you</h3>
         <p id="cust-empty" class="muted" hidden>No credit sales yet. Credit sales appear here with each customer's balance.</p>
@@ -229,6 +229,7 @@
   <script src="./js/db.js"></script>
   <script src="./js/money.js"></script>
   <script src="./js/calc.js"></script>
+  <script src="./js/validation.js"></script>
   <script src="./js/app.js"></script>
 </body>
 </html>

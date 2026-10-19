@@ -154,3 +154,19 @@ This design is locked as v1.0. Changes require a new version and explicit owner 
   Inflow / Outflow / Net cashflow.
 - **Interaction decision (D20):** delete moves from list rows into the edit
   screen (two-step intent). Scheduled for the UI/UX phase.
+
+
+---
+
+## v1.3 Amendment (2026-10-19, owner-approved)
+
+- **New module `app/js/validation.js`** - pure, unit-tested helpers:
+  `normalizeName` (V7), `isOverpayment` (V2), `isLargeAmount` (V4),
+  `isOldDate` (V5), `isLikelyDuplicate` (V3). V1 and V6 are enforced at the
+  save gate in app.js. All gates are inline messages / confirm prompts -
+  nothing silently blocks.
+- **Dashboard layout:** hero card (net cashflow + trend strip rendered as
+  proportional divs from `cashflowForRange` over the last 7 local days),
+  2-column `.grid2` of stat cards. No chart library - the trend is 7 divs.
+- The pay modal independently confirms overpayments (V2) since it is the
+  fast path for recording debt received / supplier payments.

@@ -12,10 +12,12 @@ const vm = require('vm');
 const src =
   fs.readFileSync(path.join(__dirname, '..', 'app', 'js', 'money.js'), 'utf8') +
   '\n' +
-  fs.readFileSync(path.join(__dirname, '..', 'app', 'js', 'calc.js'), 'utf8');
+  fs.readFileSync(path.join(__dirname, '..', 'app', 'js', 'calc.js'), 'utf8') +
+  '\n' +
+  fs.readFileSync(path.join(__dirname, '..', 'app', 'js', 'validation.js'), 'utf8');
 const ctx = vm.createContext({});
 vm.runInContext(src, ctx);
-const { parseAmountT, formatMK, totalsForRange, totalsForDate, outstandingByCustomer, totalOutstanding, cashflowForRange, payablesBySupplier, totalPayable } = ctx;
+const { parseAmountT, formatMK, totalsForRange, totalsForDate, outstandingByCustomer, totalOutstanding, cashflowForRange, payablesBySupplier, totalPayable, normalizeName, isOverpayment, isLargeAmount, isOldDate, isLikelyDuplicate } = ctx;
 
 let pass = 0, fail = 0;
 function eq(name, actual, expected) {
@@ -158,6 +160,26 @@ eq('payable-only supplier with no purchases excluded', totalPayable([
   { type: 'supplier_payment', amountT: 700000, date: '2026-10-14', supplierId: 'U' }
 ]), 0);
 eq('empty db -> no payables', [totalPayable([])], [0]);
+
+console.log('--- v1.3: validation rules (V2-V7) ---');
+eq('V7 normalize: trim + collapse spaces', normalizeName('  Grace   Mwale ').value, 'Grace Mwale');
+eq('V7 empty name rejected', normalizeName('').ok, false);
+eq('V7 whitespace-only rejected', normalizeName('   ').ok, false);
+eq('V7 all-numeric name rejected', normalizeName('123').ok, false);
+eq('V7 name with number ok', normalizeName('Shop 2 Limbe').value, 'Shop 2 Limbe');
+eq('V7 overlong name rejected', normalizeName('x'.repeat(41)).ok, false);
+eq('V2 overpayment detected', isOverpayment(5000000, 6000000), true);
+eq('V2 exact balance not flagged', isOverpayment(6000000, 6000000), false);
+eq('V4 MK1,000,000.01 is large', isLargeAmount(100000001), true);
+eq('V4 MK1,000,000.00 not flagged', isLargeAmount(100000000), false);
+eq('V5 date 8 days old flagged', isOldDate('2026-10-11', '2026-10-19'), true);
+eq('V5 date 6 days old not flagged', isOldDate('2026-10-13', '2026-10-19'), false);
+eq('V5 today never flagged', isOldDate('2026-10-19', '2026-10-19'), false);
+const V3CAND = { type: 'cash_sale', amountT: 100000, date: '2026-10-19', customerId: null, supplierId: null };
+const V3NOW = Date.parse('2026-10-19T12:00:00');
+eq('V3 duplicate within a minute flagged', isLikelyDuplicate(V3CAND, [Object.assign({}, V3CAND, { createdAt: V3NOW - 30000 })], V3NOW), true);
+eq('V3 older than a minute not flagged', isLikelyDuplicate(V3CAND, [Object.assign({}, V3CAND, { createdAt: V3NOW - 120000 })], V3NOW), false);
+eq('V3 different amount not flagged', isLikelyDuplicate(V3CAND, [Object.assign({}, V3CAND, { amountT: 99900, createdAt: V3NOW - 30000 })], V3NOW), false);
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 if (fail > 0) process.exit(1);
