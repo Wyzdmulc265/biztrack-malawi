@@ -11,7 +11,8 @@
 </head>
 <body>
   <header class="topbar">
-    <h1>BizTrack Malawi</h1>
+    <h1 id="topbar-title">BizTrack</h1>
+    <span id="net-dot" class="net-dot" title="Online"></span>
   </header>
 
   <main>
@@ -29,7 +30,7 @@
           <p class="stat-value" id="stat-outflow">MK0.00</p>
           <p class="stat-sub" id="stat-outflow-sub">money out MK0.00 / supplier payments MK0.00</p>
         </div>
-        <div class="stat">
+        <div class="stat stat-hero">
           <p class="stat-label">Net cashflow today</p>
           <p class="stat-value" id="stat-net">MK0.00</p>
           <p class="stat-sub">Cash that actually moved. This is money movement, not profit.</p>
@@ -42,7 +43,8 @@
           <p class="stat-label">You owe suppliers (total)</p>
           <p class="stat-value" id="stat-payable">MK0.00</p>
         </div>
-        <p id="dash-empty" class="muted" hidden>No transactions yet today. Tap + Add to record your first.</p>
+        <p id="dash-empty" class="muted" hidden>No transactions yet today.</p>
+        <button type="button" id="dash-add-btn" class="btn small" hidden>Add first transaction</button>
       </div>
       <div class="card">
         <h3>Customers who owe you</h3>
@@ -59,6 +61,12 @@
     <!-- Add Transaction -->
     <section id="add-screen">
       <div class="card">
+        <div class="field">
+          <label for="amount">Amount (MK)</label>
+          <input id="amount" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off" autofocus>
+          <p class="err" id="amount-err" hidden></p>
+        </div>
+
         <div class="seg" role="tablist" aria-label="Transaction type">
           <button type="button" class="seg-btn active" data-type="cash_sale">Cash sale</button>
           <button type="button" class="seg-btn" data-type="credit_sale">Credit sale</button>
@@ -66,12 +74,6 @@
           <button type="button" class="seg-btn" data-type="expense">Money out</button>
           <button type="button" class="seg-btn" data-type="credit_purchase">Credit purchase</button>
           <button type="button" class="seg-btn" data-type="supplier_payment">Supplier payment</button>
-        </div>
-
-        <div class="field">
-          <label for="amount">Amount (MK)</label>
-          <input id="amount" type="text" inputmode="decimal" placeholder="0.00" autocomplete="off">
-          <p class="err" id="amount-err" hidden></p>
         </div>
 
         <div class="field" id="customer-field" hidden>
@@ -99,7 +101,10 @@
           <p class="err" id="category-err" hidden></p>
         </div>
 
-        <div class="field">
+        <div class="date-row">
+          <button type="button" id="date-chip" class="chip" aria-expanded="false">Date: Today</button>
+        </div>
+        <div class="field" id="date-field" hidden>
           <label for="date">Date</label>
           <input id="date" type="date">
           <p class="err" id="date-err" hidden></p>
@@ -110,6 +115,7 @@
           <textarea id="note" rows="2" maxlength="200"></textarea>
         </div>
 
+        <button type="button" id="edit-delete-btn" class="btn danger" hidden>Delete</button>
         <button type="button" id="edit-cancel-btn" class="btn plain" hidden>Cancel edit</button>
         <button type="button" id="save-btn" class="btn primary">Save</button>
         <div id="storage-error" class="banner" hidden>Could not save. Storage unavailable or full - your entry is preserved, try again.</div>
@@ -138,7 +144,8 @@
             <option value="month">Last 30 days</option>
           </select>
         </div>
-        <p id="list-empty" hidden class="muted">No transactions yet. Add your first one.</p>
+        <p id="list-empty" hidden class="muted">No transactions yet.</p>
+        <button type="button" id="list-add-btn" class="btn small" hidden>Add first transaction</button>
         <p id="list-nomatch" hidden class="muted">No transactions match your search or filter.</p>
         <div id="tx-list"></div>
       </div>
@@ -174,7 +181,7 @@
     </section>
   </main>
 
-  <div id="toast" hidden></div>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
 
   <!-- Payment modal (FR-4) -->
   <div id="pay-modal" class="modal" hidden>
@@ -201,10 +208,22 @@
   </div>
 
   <nav class="bottomnav">
-    <button class="nav-btn" data-screen="dashboard">Home</button>
-    <button class="nav-btn active" data-screen="add">+ Add</button>
-    <button class="nav-btn" data-screen="list">List</button>
-    <button class="nav-btn" data-screen="reports">Reports</button>
+    <button class="nav-btn" data-screen="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-btn active" data-screen="add">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+      <span>Add</span>
+    </button>
+    <button class="nav-btn" data-screen="list">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.01 6h0M3.01 12h0M3.01 18h0"/></svg>
+      <span>List</span>
+    </button>
+    <button class="nav-btn" data-screen="reports">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 20V12M12 20V5M19 20v-8"/><path d="M3 20h18"/></svg>
+      <span>Reports</span>
+    </button>
   </nav>
 
   <script src="./js/db.js"></script>

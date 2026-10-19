@@ -18,11 +18,15 @@ const TODAY = localISO(new Date());
 const MIN_DATE = localISO(new Date(Date.now() - 365 * 24 * 60 * 60 * 1000));
 
 // --- navigation ---
+const SCREEN_TITLE = { dashboard: 'BizTrack', add: 'Add transaction', list: 'Transactions', reports: 'Reports' };
 function show(name) {
   ['dashboard', 'add', 'list', 'reports'].forEach((s) => {
     $('#' + s + '-screen').hidden = s !== name;
   });
   $$('.nav-btn').forEach((b) => b.classList.toggle('active', b.dataset.screen === name));
+  $('#topbar-title').textContent = name === 'dashboard'
+    ? 'Today \u00b7 ' + new Date(TODAY + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+    : SCREEN_TITLE[name];
   if (name === 'list') renderList();
   if (name === 'dashboard') renderDashboard();
   if (name === 'reports') renderReports();
@@ -177,7 +181,7 @@ $('#save-btn').addEventListener('click', async () => {
     await loadCustomers();
     await loadSuppliers();
     if (updated) { toast('Updated ' + formatMK(tx.amountT)); show('list'); }
-    else { toast('Saved ' + formatMK(tx.amountT)); }
+    else { toast('Saved ' + formatMK(tx.amountT)); $('#amount').focus(); }
   } catch (err) {
     // Entry fields preserved so the owner can retry (design section 6)
     $('#storage-error').hidden = false;
@@ -198,7 +202,9 @@ async function renderDashboard() {
   $('#stat-net').textContent = formatMK(cf.netCashflow);
   $('#stat-outstanding').textContent = formatMK(totalOutstanding(txs));
   $('#stat-payable').textContent = formatMK(totalPayable(txs));
-  $('#dash-empty').hidden = txs.some((x) => x.date === TODAY);
+  const hasToday = txs.some((x) => x.date === TODAY);
+  $('#dash-empty').hidden = hasToday;
+  $('#dash-add-btn').hidden = hasToday;
   await Promise.all([renderCustomers(txs), renderSuppliers(txs)]);
 }
 
@@ -360,6 +366,7 @@ async function renderList() {
   filtered.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
 
   $('#list-empty').hidden = txs.length > 0;
+  $('#list-add-btn').hidden = txs.length > 0;
   $('#list-nomatch').hidden = !(txs.length > 0 && filtered.length === 0);
   if (txs.length === 0 || filtered.length === 0) {
     $('#tx-list').innerHTML = '';
@@ -381,18 +388,12 @@ async function renderList() {
       (who ? ' <span class="who">' + escapeHtml(who) + '</span>' : '') +
       (t.note ? ' <span class="note">' + escapeHtml(t.note) + '</span>' : '') +
       '<span class="amt">' + formatMK(t.amountT) + '</span></div>' +
-      '<button type="button" class="del-btn" aria-label="Delete transaction">Delete</button></li>';
+      '<span class="chev" aria-hidden="true">\u203a</span></li>';
   }
   html += '</ul>';
   $('#tx-list').innerHTML = html;
 
   $$('#tx-list .tx-row').forEach((row) => row.addEventListener('click', () => openEdit(row.dataset.id)));
-  $$('#tx-list .del-btn').forEach((btn) => btn.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    if (!confirm('Delete this transaction? This cannot be undone.')) return;
-    await dbDelete('transactions', btn.closest('.tx-row').dataset.id);
-    renderList();
-  }));
 }
 
 $('#search').addEventListener('input', (e) => { filterState.q = e.target.value; renderList(); });
@@ -424,12 +425,17 @@ async function openEdit(id) {
   $('#note').value = t.note || '';
   $('#save-btn').textContent = 'Update';
   $('#edit-cancel-btn').hidden = false;
+  $('#edit-delete-btn').hidden = false;
+  syncDateChip();
 }
 
 function resetEditState() {
   editingId = null;
   $('#save-btn').textContent = 'Save';
   $('#edit-cancel-btn').hidden = true;
+  $('#edit-delete-btn').hidden = true;
+  $('#date-field').hidden = true;
+  syncDateChip();
 }
 
 $('#edit-cancel-btn').addEventListener('click', () => {
@@ -548,3 +554,50 @@ $('#csv-btn').addEventListener('click', async () => {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
   toast('CSV exported for ' + weekLabel(start));
 });
+
+// --- Phase B (UI/UX, D20/D21) ---
+// Date chip: keeps the entry form short - the full date input only appears on demand.
+function syncDateChip() {
+  const v = $('#date').value;
+  $('#date-chip').textContent = 'Date: ' + (v === TODAY ? 'Today' : dayLabel(v));
+}
+$('#date-chip').addEventListener('click', () => {
+  const f = $('#date-field');
+  f.hidden = !f.hidden;
+  $('#date-chip').setAttribute('aria-expanded', String(!f.hidden));
+  if (!f.hidden) {
+    try { if ($('#date').showPicker) $('#date').showPicker(); } catch (e) { /* older browsers */ }
+  }
+});
+$('#date').addEventListener('change', syncDateChip);
+syncDateChip();
+
+// Delete lives inside the edit screen now (D20): two-step intent.
+$('#edit-delete-btn').addEventListener('click', async () => {
+  if (!editingId) return;
+  if (!confirm('Delete this transaction? This cannot be undone.')) return;
+  await dbDelete('transactions', editingId);
+  $('#amount').value = '';
+  $('#customer').value = '';
+  $('#supplier').value = '';
+  $('#note').value = '';
+  $('#date').value = TODAY;
+  resetEditState();
+  toast('Deleted');
+  show('list');
+});
+
+// Empty states point at the first action.
+$('#dash-add-btn').addEventListener('click', () => show('add'));
+$('#list-add-btn').addEventListener('click', () => show('add'));
+
+// Connectivity indicator: offline the app still works (offline-first).
+function netState() {
+  const on = navigator.onLine;
+  const dot = $('#net-dot');
+  dot.classList.toggle('on', on);
+  dot.title = on ? 'Online' : 'Offline - the app still works';
+}
+window.addEventListener('online', netState);
+window.addEventListener('offline', netState);
+netState();
