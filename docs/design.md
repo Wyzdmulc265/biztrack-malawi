@@ -135,3 +135,38 @@ dashboard, list, and reports; no per-screen re-implementations.
 
 ---
 This design is locked as v1.0. Changes require a new version and explicit owner approval.
+
+
+---
+
+## v1.2 Amendment (2026-10-19, owner-approved)
+
+- **Data:** new `suppliers` store (id, name, createdAt; name unique) - IndexedDB
+  version bumped 1 -> 2, additive migration. Transactions gain `supplierId` and
+  two types: `credit_purchase`, `supplier_payment`. No change to existing records.
+- **calc.js:** `cashflowForRange` (inflow/outflow/net), `payablesBySupplier`,
+  `totalPayable`. Receivables functions unchanged. Single-source-of-truth rule
+  preserved: every screen reads these functions, nothing is stored.
+- **UI:** 6-type entry selector (2 rows of 3), supplier datalist field shown only
+  for supplier types, dashboard shows inflow/outflow/net + receivables + payables
+  totals plus a mirrored "You owe suppliers" card; the payment modal is generalized
+  (customer mode / supplier mode). CSV gains a Party column; totals are
+  Inflow / Outflow / Net cashflow.
+- **Interaction decision (D20):** delete moves from list rows into the edit
+  screen (two-step intent). Scheduled for the UI/UX phase.
+
+
+---
+
+## v1.3 Amendment (2026-10-19, owner-approved)
+
+- **New module `app/js/validation.js`** - pure, unit-tested helpers:
+  `normalizeName` (V7), `isOverpayment` (V2), `isLargeAmount` (V4),
+  `isOldDate` (V5), `isLikelyDuplicate` (V3). V1 and V6 are enforced at the
+  save gate in app.js. All gates are inline messages / confirm prompts -
+  nothing silently blocks.
+- **Dashboard layout:** hero card (net cashflow + trend strip rendered as
+  proportional divs from `cashflowForRange` over the last 7 local days),
+  2-column `.grid2` of stat cards. No chart library - the trend is 7 divs.
+- The pay modal independently confirms overpayments (V2) since it is the
+  fast path for recording debt received / supplier payments.

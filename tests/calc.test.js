@@ -12,10 +12,12 @@ const vm = require('vm');
 const src =
   fs.readFileSync(path.join(__dirname, '..', 'app', 'js', 'money.js'), 'utf8') +
   '\n' +
-  fs.readFileSync(path.join(__dirname, '..', 'app', 'js', 'calc.js'), 'utf8');
+  fs.readFileSync(path.join(__dirname, '..', 'app', 'js', 'calc.js'), 'utf8') +
+  '\n' +
+  fs.readFileSync(path.join(__dirname, '..', 'app', 'js', 'validation.js'), 'utf8');
 const ctx = vm.createContext({});
 vm.runInContext(src, ctx);
-const { parseAmountT, formatMK, totalsForRange, totalsForDate, outstandingByCustomer, totalOutstanding } = ctx;
+const { parseAmountT, formatMK, totalsForRange, totalsForDate, outstandingByCustomer, totalOutstanding, cashflowForRange, payablesBySupplier, totalPayable, normalizeName, isOverpayment, isLargeAmount, isOldDate, isLikelyDuplicate } = ctx;
 
 let pass = 0, fail = 0;
 function eq(name, actual, expected) {
@@ -119,6 +121,65 @@ console.log('--- calc: empty database ---');
 const z = totalsForRange([], '2026-10-12', '2026-10-18');
 eq('empty db -> all zeros', [z.sales, z.expenses, z.payments, z.cashMovement], [0, 0, 0, 0]);
 eq('empty db -> no outstanding', totalOutstanding([]), 0);
+
+// Hand-computed v1.2 scenario (all tambala):
+//   inflow  = cash sale 100000 + debt received 500000 = 600000
+//   outflow = money out 35050 + supplier payment 75000 = 110050
+//   net cashflow = 489950
+//   credit sale 800000 and credit purchase 200000 move NO cash
+//   supplier S: owed 200000 - paid 75000 = 125000 payable
+//   supplier T: purchase 300000 - paid 350000 = -50000 (advance)
+//   total payable = 125000 (advance excluded)
+const TX2 = [
+  { type: 'cash_sale', amountT: 100000, date: '2026-10-13' },
+  { type: 'credit_sale', amountT: 800000, date: '2026-10-13', customerId: 'A' },
+  { type: 'payment', amountT: 500000, date: '2026-10-14', customerId: 'A' },
+  { type: 'expense', amountT: 35050, date: '2026-10-15' },
+  { type: 'supplier_payment', amountT: 75000, date: '2026-10-16', supplierId: 'S' },
+  { type: 'credit_purchase', amountT: 200000, date: '2026-10-17', supplierId: 'S' }
+];
+console.log('--- calc v1.2: cashflow view (D18) ---');
+const cf = cashflowForRange(TX2, '2026-10-12', '2026-10-18');
+eq('v1.2 inflow = cash sales + debt received', cf.inflow, 600000);
+eq('v1.2 outflow = money out + supplier payments', cf.outflow, 110050);
+eq('v1.2 net cashflow', cf.netCashflow, 489950);
+eq('v1.2 credit sale is NOT inflow (receivable, not cash)', cf.inflow, 600000);
+eq('v1.2 credit purchase is NOT outflow (payable, not cash)', cf.outflow, 110050);
+eq('v1.2 customer balance still works (800000 - 500000)', outstandingByCustomer(TX2).A, 300000);
+
+console.log('--- calc v1.2: payables (D19) ---');
+const TX3 = TX2.concat([
+  { type: 'credit_purchase', amountT: 300000, date: '2026-10-13', supplierId: 'T' },
+  { type: 'supplier_payment', amountT: 350000, date: '2026-10-14', supplierId: 'T' }
+]);
+const pb = payablesBySupplier(TX3);
+eq('supplier S balance: owes 125000', pb.S, 125000);
+eq('supplier T overpaid -> advance of 50000', pb.T, -50000);
+eq('total payable excludes supplier advances', totalPayable(TX3), 125000);
+eq('payable-only supplier with no purchases excluded', totalPayable([
+  { type: 'supplier_payment', amountT: 700000, date: '2026-10-14', supplierId: 'U' }
+]), 0);
+eq('empty db -> no payables', [totalPayable([])], [0]);
+
+console.log('--- v1.3: validation rules (V2-V7) ---');
+eq('V7 normalize: trim + collapse spaces', normalizeName('  Grace   Mwale ').value, 'Grace Mwale');
+eq('V7 empty name rejected', normalizeName('').ok, false);
+eq('V7 whitespace-only rejected', normalizeName('   ').ok, false);
+eq('V7 all-numeric name rejected', normalizeName('123').ok, false);
+eq('V7 name with number ok', normalizeName('Shop 2 Limbe').value, 'Shop 2 Limbe');
+eq('V7 overlong name rejected', normalizeName('x'.repeat(41)).ok, false);
+eq('V2 overpayment detected', isOverpayment(5000000, 6000000), true);
+eq('V2 exact balance not flagged', isOverpayment(6000000, 6000000), false);
+eq('V4 MK1,000,000.01 is large', isLargeAmount(100000001), true);
+eq('V4 MK1,000,000.00 not flagged', isLargeAmount(100000000), false);
+eq('V5 date 8 days old flagged', isOldDate('2026-10-11', '2026-10-19'), true);
+eq('V5 date 6 days old not flagged', isOldDate('2026-10-13', '2026-10-19'), false);
+eq('V5 today never flagged', isOldDate('2026-10-19', '2026-10-19'), false);
+const V3CAND = { type: 'cash_sale', amountT: 100000, date: '2026-10-19', customerId: null, supplierId: null };
+const V3NOW = Date.parse('2026-10-19T12:00:00');
+eq('V3 duplicate within a minute flagged', isLikelyDuplicate(V3CAND, [Object.assign({}, V3CAND, { createdAt: V3NOW - 30000 })], V3NOW), true);
+eq('V3 older than a minute not flagged', isLikelyDuplicate(V3CAND, [Object.assign({}, V3CAND, { createdAt: V3NOW - 120000 })], V3NOW), false);
+eq('V3 different amount not flagged', isLikelyDuplicate(V3CAND, [Object.assign({}, V3CAND, { amountT: 99900, createdAt: V3NOW - 30000 })], V3NOW), false);
 
 console.log('\n' + pass + ' passed, ' + fail + ' failed');
 if (fail > 0) process.exit(1);

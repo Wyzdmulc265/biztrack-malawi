@@ -52,3 +52,42 @@ function totalOutstanding(txs) {
   for (const id in out) if (out[id] > 0) total += out[id];
   return total;
 }
+
+// Cashflow view (v1.2, D18): the app is a cashflow tracker.
+// inflow = cash sales + debt received. outflow = money out (incl. old
+// 'expense' records) + supplier payments. Credit sales and credit
+// purchases move NO cash - they create receivables / payables instead.
+function cashflowForRange(txs, startISO, endISO) {
+  let cashSales = 0, debtReceived = 0, moneyOut = 0, supplierPayments = 0;
+  for (const t of txs) {
+    if (t.date < startISO || t.date > endISO) continue;
+    if (t.type === 'cash_sale') cashSales += t.amountT;
+    else if (t.type === 'payment') debtReceived += t.amountT;
+    else if (t.type === 'expense') moneyOut += t.amountT;
+    else if (t.type === 'supplier_payment') supplierPayments += t.amountT;
+  }
+  const inflow = cashSales + debtReceived;
+  const outflow = moneyOut + supplierPayments;
+  return { cashSales, debtReceived, moneyOut, supplierPayments, inflow, outflow, netCashflow: inflow - outflow };
+}
+
+// Payables per supplier = credit purchases - supplier payments (v1.2, D19).
+// Negative = the business overpaid the supplier (paid ahead).
+function payablesBySupplier(txs) {
+  const out = {};
+  for (const t of txs) {
+    if (!t.supplierId) continue;
+    if (!(t.supplierId in out)) out[t.supplierId] = 0;
+    if (t.type === 'credit_purchase') out[t.supplierId] += t.amountT;
+    else if (t.type === 'supplier_payment') out[t.supplierId] -= t.amountT;
+  }
+  return out;
+}
+
+// Total the business owes suppliers (advances excluded).
+function totalPayable(txs) {
+  const out = payablesBySupplier(txs);
+  let total = 0;
+  for (const id in out) if (out[id] > 0) total += out[id];
+  return total;
+}

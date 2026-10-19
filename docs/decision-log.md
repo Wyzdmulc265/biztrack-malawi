@@ -19,3 +19,37 @@
 | 15 | 2026-10-14 | Weekly CSV = full transaction list + totals rows at end | Owner decision at design review |
 | 16 | 2026-10-14 | Design document locked as v1.0 | Owner approval gate passed | Owner |
 | 17 | 2026-10-14 | Cash movement redefined: cash sales + credit-sale payments - expenses (payments are cash received) | Owner decision; FR-8/design amended, docs to v1.1 |
+
+
+## D18 - Cashflow terminology (2026-10-19)
+App-wide relabel to cashflow terms: inflow (cash sales + debt received), outflow
+(money out + supplier payments), net cashflow. "Expense" -> "Money out" (internal
+type string unchanged; includes purchases). Owner-requested: the app is a cashflow
+tracker, and its language should say so.
+
+## D19 - Payables tracking (2026-10-19)
+Added supplier-side mirror of debt tracking: suppliers store, credit purchase and
+supplier payment types, "You owe suppliers" card with pay flow, "paid ahead" advance
+handling. Closes a v1.0 gap: the app tracked receivables but not payables.
+
+## D20 - Delete moves into edit screen (2026-10-19)
+List rows no longer carry a Delete button once the UI/UX phase lands; deleting
+happens from the edit screen behind the existing confirmation. Two-step intent
+instead of a destructive button next to everyday taps. Owner approved.
+
+## D21 - UI/UX direction (2026-10-19)
+Light theme only (no dark mode in this release); typographic app icon; the four
+proposed redesign phases are combined and built as two phases: (A) cashflow +
+payables feature, (B) combined UI/UX redesign. Owner approved.
+
+
+## D22 - Dashboard cards (2026-10-19)
+Dashboard rebuilt as tiles: hero net-cashflow card with a 7-day CSS-only trend
+strip, 2-column grid pairing inflow/outflow and the receivable/payable totals,
+accent edges for cash in (green) / cash out (red-brown). Owner approved.
+
+## D23 - Validation rules V1-V7 (2026-10-19)
+Input validation set adopted: existing-party-only debt received/supplier payments
+(V1), overpayment confirm (V2), duplicate guard (V3), large-amount confirm (V4),
+old-date notice (V5), edit-type confirm (V6), name hygiene (V7). Every gate asks,
+none silently blocks. Pure helpers live in validation.js and are unit-tested.
